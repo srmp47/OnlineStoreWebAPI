@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -7,9 +9,17 @@ namespace OnlineStoreWebAPI.Model
 {
     public class Order
     {
-        private int OrderId{ get; set; }
-        private int userId { get; set; }
-        private DateTime date { get; set; }
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Key]
+        [Required]
+        public int OrderId{ get; set; }
+        [ForeignKey("User")]
+        [Required]
+        public int userId { get; set; }
+        public User User { get; set; }
+        [Required]
+        public DateTime date { get; set; }
         public double totalAmount { get; set; }
+        public ICollection<OrderItem>? orderItems { get; set; }
     }
 }

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -7,11 +9,23 @@ namespace OnlineStoreWebAPI.Model
 {
     public class User
     {
-        private int userId;
-        private string firstName;
-        private string lastName;
-        private string email;
-        private string password;
-        private string address;
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Required]
+        [Key]
+        public int userId { get; set; }
+        [Required]
+        [MaxLength(15)]
+        public string firstName { get; set; }
+        [MaxLength(20)]
+        public string lastName { get; set; }
+        [EmailAddress]
+        public string email { get; set; }
+        [MaxLength(100)]
+        [MinLength(8)]
+        [Required]
+        public string password { get; set; }
+        [MaxLength(200)]
+        public string address { get; set; }
+        public ICollection<Order>? orders { get; set; }
     }
 }
