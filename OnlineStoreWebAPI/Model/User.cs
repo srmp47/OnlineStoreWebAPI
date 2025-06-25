@@ -26,6 +26,7 @@ namespace OnlineStoreWebAPI.Model
         public string password { get; set; }
         [MaxLength(200)]
         public string address { get; set; }
+        public bool isActive { get; set; }
         public ICollection<Order>? orders { get; set; }
     }
 }

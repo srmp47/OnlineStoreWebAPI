@@ -1,6 +1,7 @@
 
 using Microsoft.EntityFrameworkCore;
 using OnlineStoreWebAPI.DBContext;
+using OnlineStoreWebAPI.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +17,11 @@ builder.Services.AddDbContext<OnlineStoreDBContext>(option =>
         builder.Configuration["ConnectionStrings:CityConnectionString"]
         );
 });
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IOrderItemRepository, OrderItemRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+
 
 var app = builder.Build();
 
