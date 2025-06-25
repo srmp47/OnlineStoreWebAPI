@@ -11,6 +11,17 @@ namespace OnlineStoreWebAPI.Repository
         {
             this.context = inputContext;
         }
+
+        public void cancleOrderByIdAsync(int id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Order> createNewOrderAsync(Order order)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<IEnumerable<Order>> getAllOrdersAsync()
         {
             return await context.Orders.OrderBy(o => o.OrderId).ToListAsync();
@@ -30,6 +41,16 @@ namespace OnlineStoreWebAPI.Repository
         public async Task<bool> isThereOrderById(int id)
         {
             return await context.Orders.AnyAsync(o => o.OrderId == id);
+        }
+
+        public Task<bool> isThereOrderByIdAsync(int id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Order> updateOrderAsync(Order order)
+        {
+            throw new NotImplementedException();
         }
     }
 }

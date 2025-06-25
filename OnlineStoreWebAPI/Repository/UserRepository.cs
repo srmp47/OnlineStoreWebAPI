@@ -11,6 +11,22 @@ namespace OnlineStoreWebAPI.Repository
         {
             this.context = inputContext;
         }
+
+        public Task<User> activateUserByUserIdAsync(int id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<User> createNewUserAsync(User user)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<User> deActivateUserByUserIdAsync(int id)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<IEnumerable<User>> getAllUsersAsync()
         {
             return await context.Users.OrderBy(u => u.userId).ToListAsync() ;
@@ -31,6 +47,11 @@ namespace OnlineStoreWebAPI.Repository
         public async Task<bool> isThereUserWithIdAsync(int id)
         {
             return await context.Users.AnyAsync(u => u.userId == id);
+        }
+
+        public Task<User> updateUserAsync(User user)
+        {
+            throw new NotImplementedException();
         }
     }
 }

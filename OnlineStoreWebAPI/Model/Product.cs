@@ -15,7 +15,7 @@ namespace OnlineStoreWebAPI.Model
         public int productId { get; set; }
         [Required]
         public string name { get; set; }
-        public string description { get; set; }
+        public string? description { get; set; }
         [Required]
         public double price { get; set; }
         [Required]

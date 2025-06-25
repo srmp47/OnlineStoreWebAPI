@@ -8,7 +8,10 @@ namespace OnlineStoreWebAPI.Repository
         public Task<IEnumerable<Order>> getAllOrdersOfUserByIdAsync(int userId);
         // get one order of one user
         public Task<Order?> getOrderByUserIdAndOrderIdAsync(int userId, int orderId);
-        public Task<bool> isThereOrderById(int id);
+        public Task<bool> isThereOrderByIdAsync(int id);
+        public Task<Order> createNewOrderAsync(Order order);
+        public Task<Order> updateOrderAsync(Order order);
+        public void cancleOrderByIdAsync(int id);
 
 
     }

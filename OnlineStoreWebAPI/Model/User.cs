@@ -17,16 +17,16 @@ namespace OnlineStoreWebAPI.Model
         [MaxLength(15)]
         public string firstName { get; set; }
         [MaxLength(20)]
-        public string lastName { get; set; }
+        public string? lastName { get; set; }
         [EmailAddress]
-        public string email { get; set; }
+        public string? email { get; set; }
         [MaxLength(100)]
         [MinLength(8)]
         [Required]
         public string password { get; set; }
         [MaxLength(200)]
-        public string address { get; set; }
+        public string? address { get; set; }
         public bool isActive { get; set; }
-        public ICollection<Order>? orders { get; set; }
+        public ICollection<Order>? orders { get; set; } 
     }
 }

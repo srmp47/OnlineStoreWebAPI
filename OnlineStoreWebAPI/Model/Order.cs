@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Threading.Tasks
 
 namespace OnlineStoreWebAPI.Model
 {
@@ -19,7 +19,9 @@ namespace OnlineStoreWebAPI.Model
         public User User { get; set; }
         [Required]
         public DateTime date { get; set; }
-        public double totalAmount { get; set; }
+        public double? totalAmount { get; set; }
         public ICollection<OrderItem>? orderItems { get; set; }
+        [Required]
+        public OrderStatus status { get; set; } = OrderStatus.Pending;
     }
 }
