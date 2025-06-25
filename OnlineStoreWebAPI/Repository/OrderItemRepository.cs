@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using OnlineStoreWebAPI.DBContext;
 using OnlineStoreWebAPI.Model;
 
@@ -7,19 +8,26 @@ namespace OnlineStoreWebAPI.Repository
     public class OrderItemRepository : IOrderItemRepository
     {
         private readonly OnlineStoreDBContext context;
-        public OrderItemRepository(OnlineStoreDBContext inputContext)
+        private readonly IMapper mapper;
+        public OrderItemRepository(OnlineStoreDBContext inputContext , IMapper inputMapper)
         {
             this.context = inputContext;
+            this.mapper = inputMapper;
         }
 
-        public Task<OrderItem> createNewOrderItemAsync(OrderItem orderItem)
+        public async Task<OrderItem> createNewOrderItemAsync(OrderItem orderItem)
         {
-            throw new NotImplementedException();
+            context.OrderItems.Add(orderItem);
+            await context.SaveChangesAsync();
+            return orderItem;
         }
 
-        public Task<OrderItem> deleteOrderItemByIdAsync(int id)
+        public async Task<OrderItem> deleteOrderItemByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            var orderItem = await context.OrderItems.FirstOrDefaultAsync(oi => oi.OrderItemId == id);
+            context.OrderItems.Remove(orderItem);
+            await context.SaveChangesAsync(); 
+            return orderItem;
         }
 
         public async Task<IEnumerable<OrderItem>> getAllOrderItemsByOrderIdAsync(int orderId)
@@ -38,9 +46,14 @@ namespace OnlineStoreWebAPI.Repository
             return await context.OrderItems.AnyAsync(oi => oi.OrderItemId == id);
         }
 
-        public Task<OrderItem> updateOrderItemAsync(OrderItem orderItem)
+        public async Task<OrderItem> updateOrderItemAsync(OrderItem orderItem)
         {
-            throw new NotImplementedException();
+            var currentOrderItem =await context.OrderItems.FirstOrDefaultAsync
+                (oi =>  oi.OrderItemId==orderItem.OrderItemId);
+            mapper.Map(currentOrderItem, orderItem);
+            await context.SaveChangesAsync();
+            return orderItem;
+            
         }
     }
 }

@@ -11,7 +11,7 @@ namespace OnlineStoreWebAPI.Repository
         public Task<bool> isThereOrderByIdAsync(int id);
         public Task<Order> createNewOrderAsync(Order order);
         public Task<Order> updateOrderAsync(Order order);
-        public void cancleOrderByIdAsync(int id);
+        public Task cancelOrderByIdAsync(int id);
 
 
     }

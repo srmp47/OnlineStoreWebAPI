@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using OnlineStoreWebAPI.DBContext;
 using OnlineStoreWebAPI.Model;
 
@@ -7,19 +8,25 @@ namespace OnlineStoreWebAPI.Repository
     public class OrderRepository : IOrderRepository
     {
         private readonly OnlineStoreDBContext context;
-        public OrderRepository(OnlineStoreDBContext inputContext)
+        private readonly IMapper mapper;
+        public OrderRepository(OnlineStoreDBContext inputContext, IMapper inputMapper)
         {
             this.context = inputContext;
+            this.mapper = inputMapper;
         }
 
-        public void cancleOrderByIdAsync(int id)
+        public async  Task cancelOrderByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            var order = await context.Orders.FirstOrDefaultAsync(o => o.OrderId == id);
+            order.status = OrderStatus.Cancelled; 
+            await context.SaveChangesAsync();
         }
 
-        public Task<Order> createNewOrderAsync(Order order)
+        public async Task<Order> createNewOrderAsync(Order order)
         {
-            throw new NotImplementedException();
+            context.Orders.Add(order);
+            await context.SaveChangesAsync();
+            return order;
         }
 
         public async Task<IEnumerable<Order>> getAllOrdersAsync()
@@ -38,19 +45,21 @@ namespace OnlineStoreWebAPI.Repository
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<bool> isThereOrderById(int id)
+
+
+        public async Task<bool> isThereOrderByIdAsync(int id)
         {
             return await context.Orders.AnyAsync(o => o.OrderId == id);
         }
 
-        public Task<bool> isThereOrderByIdAsync(int id)
+        public async Task<Order> updateOrderAsync(Order order)
         {
-            throw new NotImplementedException();
+            var currentOrder = await context.Orders.FirstOrDefaultAsync(o => o.OrderId == order.OrderId);
+            mapper.Map(currentOrder, order);
+            await context.SaveChangesAsync();
+            return order;
         }
 
-        public Task<Order> updateOrderAsync(Order order)
-        {
-            throw new NotImplementedException();
-        }
+        
     }
 }

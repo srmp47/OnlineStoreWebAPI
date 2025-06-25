@@ -1,6 +1,9 @@
 
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using OnlineStoreWebAPI.DBContext;
+using OnlineStoreWebAPI.Mapping;
+using OnlineStoreWebAPI.Profile;
 using OnlineStoreWebAPI.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,6 +24,8 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IOrderItemRepository, OrderItemRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 
 var app = builder.Build();
