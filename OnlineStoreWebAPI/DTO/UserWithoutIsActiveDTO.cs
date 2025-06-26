@@ -2,7 +2,7 @@
 
 namespace OnlineStoreWebAPI.DTO
 {
-    public class UserDTO
+    public class UserWithoutIsActiveDTO
     {
 
         public int userId { get; set; } 

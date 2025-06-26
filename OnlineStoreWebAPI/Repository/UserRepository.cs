@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using OnlineStoreWebAPI.DBContext;
 using OnlineStoreWebAPI.Model;
 
@@ -7,24 +8,35 @@ namespace OnlineStoreWebAPI.Repository
     public class UserRepository : IUserRepository
     {
         private readonly OnlineStoreDBContext context;
-        public UserRepository(OnlineStoreDBContext inputContext)
+        private readonly IMapper mapper;
+        public UserRepository(OnlineStoreDBContext inputContext, IMapper inputMapper)
         {
             this.context = inputContext;
+            this.mapper = inputMapper;
         }
 
-        public Task<User> activateUserByUserIdAsync(int id)
+        public async Task<bool>  activateUserByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            var user = await context.Users.FirstOrDefaultAsync(u => u.userId == id);
+            if(user == null) return false;
+            user.isActive = true;
+            await context.SaveChangesAsync();
+            return true;
         }
 
-        public Task<User> createNewUserAsync(User user)
+        public async Task<User> createNewUserAsync(User user)
         {
-            throw new NotImplementedException();
+            context.Users.Add(user);
+            await context.SaveChangesAsync();
+            return user;
         }
 
-        public Task<User> deActivateUserByUserIdAsync(int id)
+        public async  Task<User> deActivateUserByUserIdAsync(int id)
         {
-            throw new NotImplementedException();
+            var user = await context.Users.FirstOrDefaultAsync(u => u.userId == id);
+            user.isActive = false;
+            await context.SaveChangesAsync();
+            return user;
         }
 
         public async Task<IEnumerable<User>> getAllUsersAsync()
@@ -49,9 +61,12 @@ namespace OnlineStoreWebAPI.Repository
             return await context.Users.AnyAsync(u => u.userId == id);
         }
 
-        public Task<User> updateUserAsync(User user)
+        public async Task<User> updateUserAsync(User user)
         {
-            throw new NotImplementedException();
+            var currentUser = await context.Users.FirstOrDefaultAsync(u => u.userId == user.userId);
+            mapper.Map(currentUser, user);
+            await context.SaveChangesAsync();
+            return user;
         }
     }
 }

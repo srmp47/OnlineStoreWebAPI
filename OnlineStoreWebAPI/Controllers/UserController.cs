@@ -1,0 +1,49 @@
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
+using OnlineStoreWebAPI.DTO;
+using OnlineStoreWebAPI.Model;
+using OnlineStoreWebAPI.Repository;
+
+namespace OnlineStoreWebAPI.Controllers
+{
+    [Route("api/User")]
+    [ApiController]
+    public class UserController : ControllerBase
+    {
+        private readonly IMapper mapper;
+        private readonly IUserRepository userRepository;
+        public UserController(IMapper mapper, IUserRepository userRepository)
+        {
+            this.mapper = mapper;
+            this.userRepository = userRepository;
+        }
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<User>>> getAllUsers()
+        {
+            var Users = await userRepository.getAllUsersAsync();
+            if (Users == null) return NoContent();
+            return Ok(Users);
+
+        }
+        [HttpGet("{id}")]
+        public async Task<IActionResult> getUserById(int id, bool showOrders)
+        {
+            var user = await userRepository.getUserByIdAsync(id);
+            if (user == null) return NotFound();
+            if (showOrders) return Ok(user);
+            else
+            {
+                var userWithoutOrders = mapper.Map<UserWithoutOrdersDTO>(user);
+                return Ok(userWithoutOrders);
+            }
+        }
+        [HttpPatch("{id}/activate")]
+        public async Task<IActionResult> activateUserById(int id)
+        {
+            var success = await userRepository.activateUserByIdAsync(id);
+            if(success) return Ok();
+            else return NotFound("User Not Found!");
+        }
+
+    }
+}

@@ -8,8 +8,10 @@ namespace OnlineStoreWebAPI.Mapping
     {
         public MappingProfile()
         {
-            CreateMap<UserDTO, User>();
-            CreateMap<OrderItem, UserDTO>();
+            CreateMap<UserWithoutIsActiveDTO, User>();
+            CreateMap<OrderItem, UserWithoutIsActiveDTO>();
+            CreateMap<User, UserWithoutOrdersDTO>();
+            CreateMap<UserWithoutOrdersDTO, User>();
         }
     }
 }

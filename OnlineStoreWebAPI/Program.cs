@@ -3,7 +3,6 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using OnlineStoreWebAPI.DBContext;
 using OnlineStoreWebAPI.Mapping;
-using OnlineStoreWebAPI.Profile;
 using OnlineStoreWebAPI.Repository;
 
 var builder = WebApplication.CreateBuilder(args);

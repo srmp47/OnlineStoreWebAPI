@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using OnlineStoreWebAPI.DBContext;
 using OnlineStoreWebAPI.Model;
 
@@ -7,19 +8,26 @@ namespace OnlineStoreWebAPI.Repository
     public class ProductRepository : IProductRepository
     {
         private readonly OnlineStoreDBContext context;
-        public ProductRepository(OnlineStoreDBContext inputContext)
+        private readonly IMapper mapper;
+        public ProductRepository(OnlineStoreDBContext inputContext, IMapper inputMapper)
         {
             this.context = inputContext;
+            this.mapper = inputMapper;
         }
 
-        public Task<Product> createNewProductAsync(Product product)
+        public async Task<Product> createNewProductAsync(Product product)
         {
-            throw new NotImplementedException();
+            context.Products.Add(product);
+            await context.SaveChangesAsync();
+            return product;
         }
 
-        public Task<Product> deleteProductByIdAsync(int id)
+        public async Task<Product> deleteProductByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            var product = await context.Products.FirstOrDefaultAsync(p => p.productId == id);
+            context.Products.Remove(product);
+            await context.SaveChangesAsync();
+            return product;
         }
 
         public async Task<IEnumerable<Product>> getAllProductsAsync()
@@ -37,14 +45,18 @@ namespace OnlineStoreWebAPI.Repository
             return await context.Products.AnyAsync(p => p.productId == id);
         }
 
-        public Task<bool> isThereProductByIdAsync(int id)
+        public async Task<bool> isThereProductWithIdAsync(int id)
         {
-            throw new NotImplementedException();
+            return await context.Products.AnyAsync(p => p.productId == id);
         }
 
-        public Task<Product> updateProductAsync(Product product)
+        public async Task<Product> updateProductAsync(Product product)
         {
-            throw new NotImplementedException();
+            var currentProduct = await context.Products.FirstOrDefaultAsync
+                (p => p.productId == product.productId);
+            mapper.Map(currentProduct, product);
+            await context.SaveChangesAsync();
+            return product;
         }
     }
 }
