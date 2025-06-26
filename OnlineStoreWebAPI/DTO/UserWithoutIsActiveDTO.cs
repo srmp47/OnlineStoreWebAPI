@@ -5,7 +5,6 @@ namespace OnlineStoreWebAPI.DTO
     public class UserWithoutIsActiveDTO
     {
 
-        public int userId { get; set; } 
         public string firstName { get; set; } 
         public string? lastName { get; set; }
         public string? email { get; set; }

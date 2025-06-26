@@ -21,12 +21,13 @@ namespace OnlineStoreWebAPI.Model
         [EmailAddress]
         public string? email { get; set; }
         [MaxLength(100)]
-        [MinLength(8)]
         [Required]
+        [MinLength(8)]
         public string password { get; set; }
         [MaxLength(200)]
         public string? address { get; set; }
-        public bool isActive { get; set; }
+        [Required]
+        public bool isActive { get; set; } = false; 
         public ICollection<Order>? orders { get; set; } 
     }
 }

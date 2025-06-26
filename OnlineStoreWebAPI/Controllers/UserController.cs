@@ -44,6 +44,18 @@ namespace OnlineStoreWebAPI.Controllers
             if(success) return Ok();
             else return NotFound("User Not Found!");
         }
+        [HttpPost("AddUser")]
+        public async Task<IActionResult> createNewUser([FromBody] UserWithoutIsActiveDTO inputUser)
+        {
+            if (inputUser == null) return BadRequest("User is null");
+            var user = mapper.Map<User>(inputUser);
+            if (!ModelState.IsValid) return BadRequest("Enter Valid Information");
+            else
+            {
+                await userRepository.createNewUserAsync(user);
+                return Ok("User Added successfully!");
+            }
+        }
 
     }
 }
