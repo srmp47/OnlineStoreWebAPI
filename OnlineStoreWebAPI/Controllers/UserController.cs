@@ -20,9 +20,9 @@ namespace OnlineStoreWebAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<User>>> getAllUsers()
         {
-            var Users = await userRepository.getAllUsersAsync();
-            if (Users == null) return NoContent();
-            return Ok(Users);
+            var result = await userRepository.getAllUsersAsync();
+            if (result == null) return NoContent();
+            return Ok(result);
 
         }
         [HttpGet("{id}")]
@@ -44,12 +44,12 @@ namespace OnlineStoreWebAPI.Controllers
             if(success) return Ok("User Activated Successfully");
             else return NotFound("User Not Found!");
         }
-        [HttpGet("{id}/Delete")]
+        [HttpDelete("{id}")]
         public async  Task<IActionResult> deleteUserById(int id){
             var isValidId = await userRepository.isThereUserWithIdAsync(id);
             if (!isValidId) return NotFound("User not exist");
-            var user = await userRepository.deleteUserByIdAsync(id);
-            return Ok(user);
+            var result = await userRepository.deleteUserByIdAsync(id);
+            return Ok(result);
             
         }
         [HttpPost("AddUser")]
@@ -88,7 +88,7 @@ namespace OnlineStoreWebAPI.Controllers
             else return Ok("There is not");
             
         }
-        // this method does not work correctly!!!
+        // Update is not fully implemented 
         // see update method in repository
         // how to implement transforing data from userDTO to database?
         //I could not do it by mapping!

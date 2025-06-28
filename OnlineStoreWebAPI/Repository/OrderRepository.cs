@@ -39,9 +39,9 @@ namespace OnlineStoreWebAPI.Repository
             return await context.Orders.Where(o => o.userId == userId).ToListAsync();
         }
 
-        public async Task<Order?> getOrderByUserIdAndOrderIdAsync(int userId, int orderId)
+        public async Task<Order?> getOrderByOrderIdAsync(int orderId)
         {
-            return await context.Orders.Where(o => o.userId == userId && o.OrderId == orderId)
+            return await context.Orders.Where(o =>  o.OrderId == orderId)
                 .FirstOrDefaultAsync();
         }
 

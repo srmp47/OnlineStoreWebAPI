@@ -9,6 +9,11 @@ namespace OnlineStoreWebAPI.Model
 {
     public class Order
     {
+        public Order()
+        {
+            this.date = DateTime.Now;
+            this.status = OrderStatus.Pending;
+        }
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Key]
         [Required]
@@ -19,7 +24,8 @@ namespace OnlineStoreWebAPI.Model
         public User User { get; set; }
         [Required]
         public DateTime date { get; set; }
-        public double? totalAmount { get; set; }
+        [Range(0, double.MaxValue)]
+        public double totalAmount { get; set; } = 0;
         public ICollection<OrderItem>? orderItems { get; set; }
         [Required]
         public OrderStatus status { get; set; } = OrderStatus.Pending;

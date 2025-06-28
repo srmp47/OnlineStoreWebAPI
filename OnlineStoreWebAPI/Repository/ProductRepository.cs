@@ -40,21 +40,21 @@ namespace OnlineStoreWebAPI.Repository
             return await context.Products.OrderBy(p => p.productId).Where(p => p.productId == id).FirstOrDefaultAsync();
         }
 
-        public async Task<bool> isThereProductById(int id)
-        {
-            return await context.Products.AnyAsync(p => p.productId == id);
-        }
+       
 
         public async Task<bool> isThereProductWithIdAsync(int id)
         {
             return await context.Products.AnyAsync(p => p.productId == id);
         }
 
-        public async Task<Product> updateProductAsync(Product product)
+        public async Task<Product> updateProductAsync(int id,Product product)
         {
             var currentProduct = await context.Products.FirstOrDefaultAsync
-                (p => p.productId == product.productId);
-            mapper.Map(currentProduct, product);
+                (p => p.productId == id);
+            currentProduct.name = product.name;
+            currentProduct.StockQuantity = product.StockQuantity;
+            currentProduct.price = product.price;
+            context.Update(currentProduct);
             await context.SaveChangesAsync();
             return product;
         }
