@@ -12,6 +12,7 @@ namespace OnlineStoreWebAPI.Mapping
             CreateMap<OrderItem, UserWithoutIsActiveDTO>();
             CreateMap<User, UserWithoutOrdersDTO>();
             CreateMap<UserWithoutOrdersDTO, User>();
+
         }
     }
 }

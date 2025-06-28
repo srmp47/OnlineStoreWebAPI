@@ -10,8 +10,9 @@ namespace OnlineStoreWebAPI.Repository
         public Task<bool> isActiveUserWithIdAsync(int id);
         public Task<User> createNewUserAsync(User user);
         public Task<bool> activateUserByIdAsync(int id);
-        public Task<User> deActivateUserByUserIdAsync(int id);
-        public Task<User> updateUserAsync(User user);
+        public Task<bool> deActivateUserByUserIdAsync(int id);
+        public Task<User> updateUserAsync(int id,User user);
+        public Task<User> deleteUserByIdAsync(int id);
 
 
     }

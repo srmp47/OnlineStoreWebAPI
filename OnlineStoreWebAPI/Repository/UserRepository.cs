@@ -31,10 +31,19 @@ namespace OnlineStoreWebAPI.Repository
             return user;
         }
 
-        public async  Task<User> deActivateUserByUserIdAsync(int id)
+        public async  Task<bool> deActivateUserByUserIdAsync(int id)
         {
             var user = await context.Users.FirstOrDefaultAsync(u => u.userId == id);
+            if(user == null) return false;
             user.isActive = false;
+            await context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<User> deleteUserByIdAsync(int id)
+        {
+            var user = await context.Users.FirstOrDefaultAsync(u => u.userId == id);
+            context.Users.Remove(user);
             await context.SaveChangesAsync();
             return user;
         }
@@ -52,8 +61,7 @@ namespace OnlineStoreWebAPI.Repository
         public async Task<bool> isActiveUserWithIdAsync(int id)
         {
             var user = await context.Users.FirstOrDefaultAsync(u => u.userId == id);
-            if (user == null) return false;
-            else return user.isActive;
+            return user.isActive;
         }
 
         public async Task<bool> isThereUserWithIdAsync(int id)
@@ -61,12 +69,16 @@ namespace OnlineStoreWebAPI.Repository
             return await context.Users.AnyAsync(u => u.userId == id);
         }
 
-        public async Task<User> updateUserAsync(User user)
+        
+        public async Task<User> updateUserAsync(int id, User user)
         {
-            var currentUser = await context.Users.FirstOrDefaultAsync(u => u.userId == user.userId);
-            mapper.Map(currentUser, user);
+            var currentUser = await context.Users.FirstOrDefaultAsync(u => u.userId == id);
+            currentUser.firstName = user.firstName;
+            currentUser.email = user.email;
+            currentUser.password = user.password;
+            context.Update(currentUser);
             await context.SaveChangesAsync();
-            return user;
+            return currentUser;
         }
     }
 }
