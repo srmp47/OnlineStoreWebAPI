@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using OnlineStoreWebAPI.DBContext;
 
@@ -10,9 +11,11 @@ using OnlineStoreWebAPI.DBContext;
 namespace OnlineStoreWebAPI.Migrations
 {
     [DbContext(typeof(OnlineStoreDBContext))]
-    partial class OnlineStoreDBContextModelSnapshot : ModelSnapshot
+    [Migration("20250629075051_updateDatabaseAndDeleteUserFromOrderItem")]
+    partial class updateDatabaseAndDeleteUserFromOrderItem
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "7.0.18");

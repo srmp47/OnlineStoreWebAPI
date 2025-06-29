@@ -10,8 +10,7 @@ namespace OnlineStoreWebAPI.Mapping
         private readonly IUserRepository userRepository;
         private readonly IOrderRepository orderRepository;
         private readonly IProductRepository productRepository;
-        public MappingProfile(IUserRepository userRepository , IOrderRepository orderRepository,
-            IProductRepository productRepository)
+        public MappingProfile()
         {
             this.orderRepository = orderRepository;
             this.userRepository = userRepository;
@@ -21,14 +20,8 @@ namespace OnlineStoreWebAPI.Mapping
             CreateMap<User, UserWithoutOrdersDTO>();
             CreateMap<UserWithoutOrdersDTO, User>();
             CreateMap<ProductDTO, Product>();
-            CreateMap<OrderDTO, Order>().ForMember
-                (dest => dest.User, opt => opt.MapFrom
-                (src => userRepository.getUserByIdAsync(src.userId).Result));
-            CreateMap<OrderItemDTO, OrderItem>().ForMember
-                (dest => dest.Order, opt => opt.MapFrom
-                (src => orderRepository.getOrderByOrderIdAsync(src.OrderId).Result)).ForMember
-                (dest => dest.User, opt => opt.MapFrom
-               (src => productRepository.getProductByIdAsync(src.productId).Result));
+            CreateMap<OrderDTO, Order>();
+            CreateMap<OrderItemDTO, OrderItem>();
         }
     }
 }

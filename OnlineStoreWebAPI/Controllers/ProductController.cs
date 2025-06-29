@@ -37,7 +37,7 @@ namespace OnlineStoreWebAPI.Controllers
 
         }
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<User>>> getAllProducts()
+        public async Task<ActionResult<IEnumerable<Product>>> getAllProducts()
         {
             var result = await productRepository.getAllProductsAsync();
             if (result == null) return NoContent();

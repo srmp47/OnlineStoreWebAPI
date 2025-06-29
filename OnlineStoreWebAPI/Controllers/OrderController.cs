@@ -30,13 +30,58 @@ namespace OnlineStoreWebAPI.Controllers
             if (inputOrder == null) return BadRequest("input Order is null!");
             if (!ModelState.IsValid) return BadRequest("Bad Request");
             Order order = mapper.Map<Order>(inputOrder);
-            foreach(var orderItemDTO in inputOrder.orderItemDTOs)
+            orderRepository.setUserInOrder(order);
+            if (inputOrder.orderItemDTOs.Count!=0 && inputOrder.orderItemDTOs != null )
             {
-                var orderItem = mapper.Map<OrderItem>(orderItemDTO);
-                order.orderItems.Add(orderItem);
+                foreach (var orderItemDTO in inputOrder.orderItemDTOs)
+                {
+                    var orderItem = mapper.Map<OrderItem>(orderItemDTO);
+                    orderItem.Order = order;
+                    orderRepository.setOrderAndProductInOrderItem(orderItem);
+                    order.orderItems.Add(orderItem);
+                }
             }
             var result = await orderRepository.createNewOrderAsync(order);
             return Ok(result);
         }
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Order>>> getAllOrders()
+        {
+            var result = await orderRepository.getAllOrdersAsync();
+            if (result == null) return NoContent();
+            return Ok(result);
+        }
+        [HttpGet("{id}")]
+        public async Task<IActionResult> getOrderById(int id)
+        {
+            var order = await orderRepository.getOrderByOrderIdAsync(id);
+            if (order == null) return NotFound();
+            return Ok(order);
+
+        }
+        [HttpGet("Orders of User/{userId}")]
+        public async Task<IActionResult> getAllOrdersOfUserById(int userId)
+        {
+            var orders = await orderRepository.getAllOrdersOfUserByIdAsync( userId);
+            if (orders == null) return NotFound();
+            return Ok(orders);
+        }
+        [HttpGet("{id}/isThere")]
+        public async Task<IActionResult> isThereOrderWithId(int id)
+        {
+            if (await orderRepository.isThereOrderByIdAsync(id)) return Ok("There is");
+            else return Ok("There is not");
+
+        }
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> deleteOrderById(int id)
+        {
+            var isValidId = await orderRepository.isThereOrderByIdAsync(id);
+            if (!isValidId) return NotFound("Product not exist");
+            var result = await orderRepository.deleteOrderByIdAsync(id);
+            return Ok(result);
+
+        }
+        // implement Update function...
     }
 }

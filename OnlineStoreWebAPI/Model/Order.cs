@@ -26,8 +26,9 @@ namespace OnlineStoreWebAPI.Model
         public DateTime date { get; set; }
         [Range(0, double.MaxValue)]
         public double totalAmount { get; set; } = 0;
-        public ICollection<OrderItem>? orderItems { get; set; }
+        public ICollection<OrderItem> orderItems { get; set; } = new List<OrderItem>();
         [Required]
         public OrderStatus status { get; set; } = OrderStatus.Pending;
+
     }
 }

@@ -6,8 +6,7 @@ namespace OnlineStoreWebAPI.DTO
 {
     public class OrderItemDTO
     {
-        [Required]
-        public int OrderId { get; set; }
+        
         [Required]
         public int productId { get; set; }
         [Required]

@@ -25,6 +25,5 @@ namespace OnlineStoreWebAPI.Model
         public int quantity { get; set; }
         [Required]
         public double price { get; set; }
-        public object User { get; internal set; }
     }
 }

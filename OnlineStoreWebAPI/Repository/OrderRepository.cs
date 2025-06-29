@@ -31,7 +31,11 @@ namespace OnlineStoreWebAPI.Repository
 
         public async Task<IEnumerable<Order>> getAllOrdersAsync()
         {
-            return await context.Orders.OrderBy(o => o.OrderId).ToListAsync();
+            return await context.Orders
+            .Include(o => o.User)
+            .Include(o => o.orderItems)
+            .ThenInclude(oi => oi.Product)
+            .ToListAsync();
         }
 
         public async Task<IEnumerable<Order>> getAllOrdersOfUserByIdAsync(int userId)
@@ -59,7 +63,25 @@ namespace OnlineStoreWebAPI.Repository
             await context.SaveChangesAsync();
             return order;
         }
+        public async Task<Order> deleteOrderByIdAsync(int id)
+        {
+            var order = await context.Orders.FirstOrDefaultAsync(o => o.OrderId == id);
+            context.Orders.Remove(order);
+            await context.SaveChangesAsync();
+            return order;
+        }
+        //in this function , I set User in Order by user id
+        public async Task setUserInOrder(Order order)
+        {
+            order.User = await context.Users.FirstOrDefaultAsync(o => o.userId == order.userId);
+        }
+        public async Task setOrderAndProductInOrderItem(OrderItem orderItem)
+        {
+            orderItem.Product= context.Products.FirstOrDefault(p => p.productId == orderItem.productId);
+            orderItem.Order = context.Orders.FirstOrDefault(o => o.OrderId == orderItem.OrderId);
 
-        
+        }
+
+
     }
 }
