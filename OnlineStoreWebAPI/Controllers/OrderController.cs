@@ -12,10 +12,14 @@ namespace OnlineStoreWebAPI.Controllers
     {
         private readonly IMapper mapper;
         private readonly IOrderRepository orderRepository;
-        public OrderController(IMapper mapper, IOrderRepository orderRepository)
+        private readonly IProductRepository productRepository;
+
+        public OrderController(IMapper mapper, IOrderRepository orderRepository,
+            IProductRepository productRepository)
         {
             this.mapper = mapper;
             this.orderRepository = orderRepository;
+            this.productRepository = productRepository;
         }
         [HttpPatch("{id}/cancel")]
         public async Task<IActionResult> cancelOrderById(int id)
@@ -35,6 +39,9 @@ namespace OnlineStoreWebAPI.Controllers
             {
                 foreach (var orderItemDTO in inputOrder.orderItemDTOs)
                 {
+                    var isValidProductId = await productRepository.
+                        isThereProductWithIdAsync(orderItemDTO.productId);
+                    if (!isValidProductId) return BadRequest("Product not exist");
                     var orderItem = mapper.Map<OrderItem>(orderItemDTO);
                     orderItem.Order = order;
                     orderRepository.setOrderAndProductInOrderItem(orderItem);
@@ -81,6 +88,14 @@ namespace OnlineStoreWebAPI.Controllers
             var result = await orderRepository.deleteOrderByIdAsync(id);
             return Ok(result);
 
+        }
+        [HttpGet("OrderItemsOfOrder/{orderId}")]
+        public async Task<IActionResult> getAllOrderItemsByOrderId(int orderId)
+        {
+            var isValidId = await orderRepository.isThereOrderByIdAsync(orderId);
+            if (!isValidId) return BadRequest("Order not exist");
+            var result = orderRepository.getAllOrderItemsByOrderIdAsync(orderId);
+            return Ok(result);
         }
         // implement Update function...
     }

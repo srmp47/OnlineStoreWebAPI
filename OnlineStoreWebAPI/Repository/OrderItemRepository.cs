@@ -9,14 +9,17 @@ namespace OnlineStoreWebAPI.Repository
     {
         private readonly OnlineStoreDBContext context;
         private readonly IMapper mapper;
+
         public OrderItemRepository(OnlineStoreDBContext inputContext , IMapper inputMapper)
         {
             this.context = inputContext;
             this.mapper = inputMapper;
+            
         }
 
         public async Task<OrderItem> createNewOrderItemAsync(OrderItem orderItem)
         {
+            
             context.OrderItems.Add(orderItem);
             await context.SaveChangesAsync();
             return orderItem;
@@ -30,20 +33,28 @@ namespace OnlineStoreWebAPI.Repository
             return orderItem;
         }
 
-        public async Task<IEnumerable<OrderItem>> getAllOrderItemsByOrderIdAsync(int orderId)
+        public async Task<IEnumerable<OrderItem>> getAllOrderItemsAsync()
         {
-            return await context.OrderItems.Where(oi => oi.OrderId == orderId).ToListAsync();
+            return await context.OrderItems.OrderBy(oi => oi.OrderItemId).ToListAsync();
         }
 
-        public async Task<OrderItem?> getOrderItemByOrderIdAndOrderItemId(int orderId, int orderItemId)
+        public async Task<OrderItem?> getOrderItemByOrderItemId( int orderItemId)
         {
-            return await context.OrderItems.Where(oi => oi.OrderId == orderId && oi.OrderItemId == orderItemId)
+            return await context.OrderItems.Where(oi => oi.OrderItemId == orderItemId)
                 .FirstOrDefaultAsync();
         }
 
         public async Task<bool> isThereOrderItemById(int id)
         {
             return await context.OrderItems.AnyAsync(oi => oi.OrderItemId == id);
+        }
+
+        public async Task setOrderAndProductInOrderItem(OrderItem orderItem)
+        {
+            orderItem.Product = await context.Products.FirstOrDefaultAsync
+                (p => p.productId == orderItem.productId);
+            orderItem.Order = await context.Orders.FirstOrDefaultAsync
+                (o => o.OrderId == orderItem.OrderId);
         }
 
         public async Task<OrderItem> updateOrderItemAsync(OrderItem orderItem)

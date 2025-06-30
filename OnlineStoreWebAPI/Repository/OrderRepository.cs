@@ -82,6 +82,9 @@ namespace OnlineStoreWebAPI.Repository
 
         }
 
-
+        public async Task<IEnumerable<OrderItem>> getAllOrderItemsByOrderIdAsync(int orderId)
+        {
+            return await context.OrderItems.Where(oi => oi.OrderId == orderId).ToListAsync();
+        }
     }
 }
