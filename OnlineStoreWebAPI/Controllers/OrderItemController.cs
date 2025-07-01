@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OnlineStoreWebAPI.DTO;
 using OnlineStoreWebAPI.Model;
@@ -8,6 +9,7 @@ namespace OnlineStoreWebAPI.Controllers
 {
     [Route("api/OrderItem")]
     [ApiController]
+    [Authorize]
     public class OrderItemController:ControllerBase
     {
         private readonly IMapper mapper;
