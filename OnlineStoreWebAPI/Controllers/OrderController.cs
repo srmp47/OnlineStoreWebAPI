@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OnlineStoreWebAPI.DTO;
 using OnlineStoreWebAPI.Model;
+using OnlineStoreWebAPI.Pagination;
 using OnlineStoreWebAPI.Repository;
 
 namespace OnlineStoreWebAPI.Controllers
@@ -54,9 +55,10 @@ namespace OnlineStoreWebAPI.Controllers
             return Ok(result);
         }
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Order>>> getAllOrders()
+        public async Task<ActionResult<IEnumerable<Order>>> getAllOrders
+            ([FromQuery]PaginationParameters paginationParameters)
         {
-            var result = await orderRepository.getAllOrdersAsync();
+            var result = await orderRepository.getAllOrdersAsync(paginationParameters);
             if (result == null) return NoContent();
             return Ok(result);
         }
@@ -69,9 +71,10 @@ namespace OnlineStoreWebAPI.Controllers
 
         }
         [HttpGet("Orders of User/{userId}")]
-        public async Task<IActionResult> getAllOrdersOfUserById(int userId)
+        public async Task<IActionResult> getAllOrdersOfUserById
+            (int userId, [FromQuery]PaginationParameters paginationParameters)
         {
-            var orders = await orderRepository.getAllOrdersOfUserByIdAsync( userId);
+            var orders = await orderRepository.getAllOrdersOfUserByIdAsync(userId,paginationParameters);
             if (orders == null) return NotFound();
             return Ok(orders);
         }

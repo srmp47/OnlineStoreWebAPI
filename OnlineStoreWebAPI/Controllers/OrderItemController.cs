@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OnlineStoreWebAPI.DTO;
 using OnlineStoreWebAPI.Model;
+using OnlineStoreWebAPI.Pagination;
 using OnlineStoreWebAPI.Repository;
 
 namespace OnlineStoreWebAPI.Controllers
@@ -27,9 +28,10 @@ namespace OnlineStoreWebAPI.Controllers
         [HttpGet]
         //implement authentication :
         //[Authorize(Roles = "Admin,User")] , ....
-        public async Task<ActionResult<IEnumerable<Product>>> getAllOrderItems()
+        public async Task<ActionResult<IEnumerable<Product>>> getAllOrderItems
+            ([FromQuery]PaginationParameters paginationParameters)
         {
-            var result = await orderItemRepository.getAllOrderItemsAsync();
+            var result = await orderItemRepository.getAllOrderItemsAsync(paginationParameters);
             if (result == null) return NoContent();
             return Ok(result);
 

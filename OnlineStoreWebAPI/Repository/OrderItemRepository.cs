@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OnlineStoreWebAPI.DBContext;
 using OnlineStoreWebAPI.Model;
+using OnlineStoreWebAPI.Pagination;
 
 namespace OnlineStoreWebAPI.Repository
 {
@@ -41,9 +43,14 @@ namespace OnlineStoreWebAPI.Repository
             return orderItem;
         }
 
-        public async Task<IEnumerable<OrderItem>> getAllOrderItemsAsync()
+        public async Task<IEnumerable<OrderItem>> getAllOrderItemsAsync
+            (PaginationParameters paginationParameters)
         {
-            return await context.OrderItems.OrderBy(oi => oi.OrderItemId).ToListAsync();
+            //return await context.OrderItems.OrderBy(oi => oi.OrderItemId).ToListAsync();
+            IQueryable<OrderItem> orderItems  = context.OrderItems;
+            orderItems = orderItems.Skip(paginationParameters.PageSize*(paginationParameters.PageId-1))
+                .Take(paginationParameters.PageSize);
+            return await orderItems.ToArrayAsync();
         }
 
         public async Task<OrderItem?> getOrderItemByOrderItemId( int orderItemId)

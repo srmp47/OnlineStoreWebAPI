@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using OnlineStoreWebAPI.DBContext;
 using OnlineStoreWebAPI.DTO;
 using OnlineStoreWebAPI.Model;
+using OnlineStoreWebAPI.Pagination;
 
 namespace OnlineStoreWebAPI.Repository
 {
@@ -31,9 +32,17 @@ namespace OnlineStoreWebAPI.Repository
             return product;
         }
 
-        public async Task<IEnumerable<Product>> getAllProductsAsync()
+        public async Task<IEnumerable<Product>> getAllProductsAsync
+            (PaginationParameters paginationParameters)
         {
-            return await context.Products.OrderBy(p => p.productId).ToListAsync();
+            // return await context.Products.OrderBy(p => p.productId).ToListAsync();
+            IQueryable<Product> products = context.Products;
+
+            products = products.
+                Skip(paginationParameters.PageSize * (paginationParameters.PageId - 1))
+                .Take(paginationParameters.PageSize);
+
+            return await products.ToArrayAsync();
         }
 
         public async Task<Product?> getProductByIdAsync(int id)

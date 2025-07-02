@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using OnlineStoreWebAPI.DBContext;
 using OnlineStoreWebAPI.Model;
+using OnlineStoreWebAPI.Pagination;
 
 namespace OnlineStoreWebAPI.Repository
 {
@@ -29,18 +30,34 @@ namespace OnlineStoreWebAPI.Repository
             return order;
         }
 
-        public async Task<IEnumerable<Order>> getAllOrdersAsync()
+        public async Task<IEnumerable<Order>> getAllOrdersAsync(PaginationParameters paginationParameters)
         {
-            return await context.Orders
-            .Include(o => o.User)
-            .Include(o => o.orderItems)
-            .ThenInclude(oi => oi.Product)
-            .ToListAsync();
+            //return await context.Orders
+            //.Include(o => o.User)
+            //.Include(o => o.orderItems)
+            //.ThenInclude(oi => oi.Product)
+            //.ToListAsync();
+            IQueryable<Order> orders = context.Orders.Include(o => o.User).Include(o => o.orderItems)
+            .ThenInclude(oi => oi.Product); 
+
+            orders = orders
+                .Skip(paginationParameters.PageSize * (paginationParameters.PageId - 1))
+                .Take(paginationParameters.PageSize);
+
+            return await orders.ToArrayAsync();
         }
 
-        public async Task<IEnumerable<Order>> getAllOrdersOfUserByIdAsync(int userId)
+        public async Task<IEnumerable<Order>> getAllOrdersOfUserByIdAsync
+            (int userId, PaginationParameters paginationParameters)
         {
-            return await context.Orders.Where(o => o.userId == userId).ToListAsync();
+            //return await context.Orders.Where(o => o.userId == userId).ToListAsync();
+            IQueryable<Order> orders = context.Orders.Include(o => o.User).Include(o => o.orderItems)
+           .ThenInclude(oi => oi.Product).Where(o => o.userId == userId);
+
+            orders = orders
+                .Skip(paginationParameters.PageSize * (paginationParameters.PageId - 1))
+                .Take(paginationParameters.PageSize);
+            return await orders.ToArrayAsync();
         }
 
         public async Task<Order?> getOrderByOrderIdAsync(int orderId)

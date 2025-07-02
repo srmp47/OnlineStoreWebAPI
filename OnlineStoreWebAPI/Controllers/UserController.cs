@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using OnlineStoreWebAPI.DTO;
 using OnlineStoreWebAPI.Model;
+using OnlineStoreWebAPI.Pagination;
 using OnlineStoreWebAPI.Repository;
 
 namespace OnlineStoreWebAPI.Controllers
@@ -20,11 +22,13 @@ namespace OnlineStoreWebAPI.Controllers
             this.userRepository = userRepository;
         }
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<User>>> getAllUsers()
+        public async Task<ActionResult<IEnumerable<User>>> getAllUsers
+            ([FromQuery] PaginationParameters paginationParameters)
         {
-            var result = await userRepository.getAllUsersAsync();
+            var result = await userRepository.getAllUsersAsync(paginationParameters);
             if (result == null) return NoContent();
             return Ok(result);
+           
 
         }
         [HttpGet("{id}")]
@@ -90,10 +94,6 @@ namespace OnlineStoreWebAPI.Controllers
             else return Ok("There is not");
             
         }
-        // Update is not fully implemented 
-        // see update method in repository
-        // how to implement transforing data from userDTO to database?
-        //I could not do it by mapping!
         [HttpPost("{id}/Update")]
         public async Task<IActionResult> updateUser(int id,[FromBody] UserUpdateDTO user)
         {

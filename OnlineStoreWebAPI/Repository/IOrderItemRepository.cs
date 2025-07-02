@@ -1,4 +1,5 @@
 ﻿using OnlineStoreWebAPI.Model;
+using OnlineStoreWebAPI.Pagination;
 
 namespace OnlineStoreWebAPI.Repository
 {
@@ -10,7 +11,8 @@ namespace OnlineStoreWebAPI.Repository
         public Task<OrderItem> updateOrderItemAsync(OrderItem orderItem);
         public Task<OrderItem> deleteOrderItemByIdAsync(int id);
         public Task setOrderAndProductInOrderItem(OrderItem orderItem); 
-        public Task<IEnumerable<OrderItem>> getAllOrderItemsAsync();
+        public Task<IEnumerable<OrderItem>> getAllOrderItemsAsync
+            (PaginationParameters paginationParameters);
         public Task<OrderItem> changeQuantityByOrderItemId(int id,int quantity);
 
     }

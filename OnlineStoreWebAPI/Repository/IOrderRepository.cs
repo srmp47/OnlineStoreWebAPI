@@ -1,11 +1,13 @@
 ﻿using OnlineStoreWebAPI.Model;
+using OnlineStoreWebAPI.Pagination;
 
 namespace OnlineStoreWebAPI.Repository
 {
     public interface IOrderRepository
     {
-        public Task<IEnumerable<Order>> getAllOrdersAsync();
-        public Task<IEnumerable<Order>> getAllOrdersOfUserByIdAsync(int userId);
+        public Task<IEnumerable<Order>> getAllOrdersAsync(PaginationParameters paginationParameters);
+        public Task<IEnumerable<Order>> getAllOrdersOfUserByIdAsync
+            (int userId,PaginationParameters paginationParameters);
         // get one order of one user
         public Task<Order?> getOrderByOrderIdAsync( int orderId);
         public Task<bool> isThereOrderByIdAsync(int id);

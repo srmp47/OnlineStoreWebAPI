@@ -1,11 +1,12 @@
 ﻿using OnlineStoreWebAPI.DTO;
 using OnlineStoreWebAPI.Model;
+using OnlineStoreWebAPI.Pagination;
 
 namespace OnlineStoreWebAPI.Repository
 {
     public interface IProductRepository
     {
-        public Task<IEnumerable<Product>> getAllProductsAsync();
+        public Task<IEnumerable<Product>> getAllProductsAsync(PaginationParameters paginationParameters);
         public Task<Product?> getProductByIdAsync(int id);
         public Task<bool> isThereProductWithIdAsync(int id);
         public Task<Product> createNewProductAsync(Product product);
