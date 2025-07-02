@@ -11,6 +11,7 @@ namespace OnlineStoreWebAPI.Repository
         public Task<OrderItem> deleteOrderItemByIdAsync(int id);
         public Task setOrderAndProductInOrderItem(OrderItem orderItem); 
         public Task<IEnumerable<OrderItem>> getAllOrderItemsAsync();
+        public Task<OrderItem> changeQuantityByOrderItemId(int id,int quantity);
 
     }
 }

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using OnlineStoreWebAPI.DBContext;
+using OnlineStoreWebAPI.DTO;
 using OnlineStoreWebAPI.Model;
 
 namespace OnlineStoreWebAPI.Repository
@@ -47,16 +48,17 @@ namespace OnlineStoreWebAPI.Repository
             return await context.Products.AnyAsync(p => p.productId == id);
         }
 
-        public async Task<Product> updateProductAsync(int id,Product product)
+        public async Task<Product> updateProductAsync(int id,ProductUpdateDTO product)
         {
             var currentProduct = await context.Products.FirstOrDefaultAsync
                 (p => p.productId == id);
-            currentProduct.name = product.name;
-            currentProduct.StockQuantity = product.StockQuantity;
-            currentProduct.price = product.price;
+            if (product.name != null) currentProduct.name = product.name;
+            if (product.StockQuantity != null) currentProduct.StockQuantity =(int)product.StockQuantity;
+            if (product.price != null) currentProduct.price = (double)product.price;
+            if (product.description != null) currentProduct.description = product.description;
             context.Update(currentProduct);
             await context.SaveChangesAsync();
-            return product;
+            return currentProduct;
         }
     }
 }

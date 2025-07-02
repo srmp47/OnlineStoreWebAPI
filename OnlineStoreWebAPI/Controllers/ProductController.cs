@@ -63,13 +63,12 @@ namespace OnlineStoreWebAPI.Controllers
         }
         // Update is not fully implemented 
         [HttpPost("{id}/Update")]
-        public async Task<IActionResult> updateProduct(int id, [FromBody] ProductDTO inputProduct)
+        public async Task<IActionResult> updateProduct(int id, [FromBody] ProductUpdateDTO product)
         {
-            if (inputProduct == null) return BadRequest("Product is null");
+            if (product == null) return BadRequest("Product is null");
             if (!ModelState.IsValid) return BadRequest("Enter Valid Information");
             var isValidId = await productRepository.isThereProductWithIdAsync(id);
             if (!isValidId) return BadRequest("Product Not Found");
-            var product = mapper.Map<Product>(inputProduct);
             if (!ModelState.IsValid) return BadRequest("Enter Valid Information");
             else
             {

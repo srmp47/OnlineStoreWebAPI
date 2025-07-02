@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using OnlineStoreWebAPI.DBContext;
+using OnlineStoreWebAPI.DTO;
 using OnlineStoreWebAPI.Model;
 
 namespace OnlineStoreWebAPI.Repository
@@ -70,12 +71,14 @@ namespace OnlineStoreWebAPI.Repository
         }
 
         
-        public async Task<User> updateUserAsync(int id, User user)
+        public async Task<User> updateUserAsync(int id, UserUpdateDTO user)
         {
             var currentUser = await context.Users.FirstOrDefaultAsync(u => u.userId == id);
-            currentUser.firstName = user.firstName;
-            currentUser.email = user.email;
-            currentUser.password = user.password;
+            if(user.firstName != null)currentUser.firstName = user.firstName;
+            if (user.lastName != null) currentUser.email = user.email;
+            if (user.password != null) currentUser.password = user.password;
+            if (user.email != null) currentUser.email = user.email;
+            if (user.address != null) currentUser.address = user.address;
             context.Update(currentUser);
             await context.SaveChangesAsync();
             return currentUser;

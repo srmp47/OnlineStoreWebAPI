@@ -25,7 +25,9 @@ namespace OnlineStoreWebAPI.Controllers
             this.productRepository = productRepository;
         }
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Product>>> getAllProducts()
+        //implement authentication :
+        //[Authorize(Roles = "Admin,User")] , ....
+        public async Task<ActionResult<IEnumerable<Product>>> getAllOrderItems()
         {
             var result = await orderItemRepository.getAllOrderItemsAsync();
             if (result == null) return NoContent();
@@ -73,6 +75,14 @@ namespace OnlineStoreWebAPI.Controllers
             else return Ok("There is not");
 
         }
-        // implement Update function...
+        [HttpPatch("{id}/changeQuantity/{quantity}")]
+        public async Task<IActionResult> changeQuantityByOrderItemId(int id,int quantity)
+        {
+            var isValidId = await orderItemRepository.isThereOrderItemById(id);
+            if (!isValidId) return NotFound("Order item not exist");
+            var orderItem = await orderItemRepository.changeQuantityByOrderItemId(id, quantity);
+            return Ok(orderItem);
+
+        }
     }
 }

@@ -1,4 +1,5 @@
-﻿using OnlineStoreWebAPI.Model;
+﻿using OnlineStoreWebAPI.DTO;
+using OnlineStoreWebAPI.Model;
 
 namespace OnlineStoreWebAPI.Repository
 {
@@ -11,7 +12,7 @@ namespace OnlineStoreWebAPI.Repository
         public Task<User> createNewUserAsync(User user);
         public Task<bool> activateUserByIdAsync(int id);
         public Task<bool> deActivateUserByUserIdAsync(int id);
-        public Task<User> updateUserAsync(int id,User user);
+        public Task<User> updateUserAsync(int id,UserUpdateDTO user);
         public Task<User> deleteUserByIdAsync(int id);
 
 

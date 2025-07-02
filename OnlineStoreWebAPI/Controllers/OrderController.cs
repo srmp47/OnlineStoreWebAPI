@@ -99,6 +99,15 @@ namespace OnlineStoreWebAPI.Controllers
             var result = orderRepository.getAllOrderItemsByOrderIdAsync(orderId);
             return Ok(result);
         }
-        // implement Update function...
+        [HttpPatch("{id}/changeStatus/{status}")]
+        public async Task<IActionResult> changeOrderStatusByOrderId(int id,OrderStatus status)
+        {
+            var isValidId = await orderRepository.isThereOrderByIdAsync(id);
+            if (!isValidId) return BadRequest("Order not exist");
+            var result = await orderRepository.changeOrderStatusByOrderIdAsync(id, status);
+            return Ok(result);
+        }
+
+       
     }
 }

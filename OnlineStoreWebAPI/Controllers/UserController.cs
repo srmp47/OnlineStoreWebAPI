@@ -95,13 +95,12 @@ namespace OnlineStoreWebAPI.Controllers
         // how to implement transforing data from userDTO to database?
         //I could not do it by mapping!
         [HttpPost("{id}/Update")]
-        public async Task<IActionResult> updateUser(int id,[FromBody] UserWithoutIsActiveDTO inputUser)
+        public async Task<IActionResult> updateUser(int id,[FromBody] UserUpdateDTO user)
         {
-            if (inputUser == null) return BadRequest("User is null");
+            if (user == null) return BadRequest("User is null");
             if (!ModelState.IsValid) return BadRequest("Enter Valid Information");
             var isValidId = await userRepository.isThereUserWithIdAsync(id);
             if (!isValidId) return BadRequest("User Not Found");
-            var user = mapper.Map<User>(inputUser);
             if (!ModelState.IsValid) return BadRequest("Enter Valid Information");
             else
             {

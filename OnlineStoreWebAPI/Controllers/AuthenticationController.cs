@@ -58,7 +58,7 @@ namespace OnlineStoreWebAPI.Controllers
             return Ok(tokenToReturn);
         }
 
-        private User ValidateUserCredentials(int id,
+        private User? ValidateUserCredentials(int id,
             string? password)
         {
             if (password == "93589358" && id == 27)

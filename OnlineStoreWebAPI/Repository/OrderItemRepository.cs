@@ -17,6 +17,14 @@ namespace OnlineStoreWebAPI.Repository
             
         }
 
+        public async Task<OrderItem> changeQuantityByOrderItemId(int id, int quantity)
+        {
+            var orderItem = await context.OrderItems.FirstOrDefaultAsync(oi => oi.OrderItemId == id);
+            orderItem.quantity = quantity;
+            await context.SaveChangesAsync();
+            return orderItem;
+        }
+
         public async Task<OrderItem> createNewOrderItemAsync(OrderItem orderItem)
         {
             

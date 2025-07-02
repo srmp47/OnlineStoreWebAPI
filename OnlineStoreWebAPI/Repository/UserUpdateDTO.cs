@@ -1,20 +1,18 @@
-﻿using OnlineStoreWebAPI.Model;
-using System.ComponentModel.DataAnnotations;
-namespace OnlineStoreWebAPI.DTO
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace OnlineStoreWebAPI.Repository
 {
-    public class UserWithoutIsActiveDTO
+    public class UserUpdateDTO
     {
-        [Required]
         [MaxLength(15)]
-        public string firstName { get; set; }
+        public string? firstName { get; set; }
         [MaxLength(20)]
         public string? lastName { get; set; }
         [EmailAddress]
         public string? email { get; set; }
         [MaxLength(100)]
-        [Required]
         [MinLength(8)]
-        public string password { get; set; }
+        public string? password { get; set; }
         [MaxLength(200)]
         public string? address { get; set; }
     }

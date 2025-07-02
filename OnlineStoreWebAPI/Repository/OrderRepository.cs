@@ -86,5 +86,13 @@ namespace OnlineStoreWebAPI.Repository
         {
             return await context.OrderItems.Where(oi => oi.OrderId == orderId).ToListAsync();
         }
+
+        public async Task<Order> changeOrderStatusByOrderIdAsync(int id, OrderStatus status)
+        {
+            var order = await context.Orders.FirstOrDefaultAsync(o => o.OrderId == id);
+            order.status = status;
+            await context.SaveChangesAsync();
+            return order;
+        }
     }
 }
