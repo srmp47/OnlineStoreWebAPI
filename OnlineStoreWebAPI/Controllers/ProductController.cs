@@ -41,9 +41,9 @@ namespace OnlineStoreWebAPI.Controllers
         }
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Product>>> getAllProducts
-            ([FromQuery]PaginationParameters paginationParameters)
+            ([FromQuery]PaginationParameters paginationParameters, [FromQuery]string? search)
         {
-            var result = await productRepository.getAllProductsAsync(paginationParameters);
+            var result = await productRepository.getAllProductsAsync(paginationParameters,search);
             if (result == null) return NoContent();
             return Ok(result);
 

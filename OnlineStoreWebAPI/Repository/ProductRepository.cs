@@ -33,10 +33,19 @@ namespace OnlineStoreWebAPI.Repository
         }
 
         public async Task<IEnumerable<Product>> getAllProductsAsync
-            (PaginationParameters paginationParameters)
+            (PaginationParameters paginationParameters, string? search)
         {
-            // return await context.Products.OrderBy(p => p.productId).ToListAsync();
+            
             IQueryable<Product> products = context.Products;
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                search = search.ToLower();
+                products = products.Where(p =>
+                    p.name.ToLower().Contains(search) ||
+                    (p.description != null && p.description.ToLower().Contains(search))
+                );
+            }
 
             products = products.
                 Skip(paginationParameters.PageSize * (paginationParameters.PageId - 1))

@@ -6,7 +6,8 @@ namespace OnlineStoreWebAPI.Repository
 {
     public interface IProductRepository
     {
-        public Task<IEnumerable<Product>> getAllProductsAsync(PaginationParameters paginationParameters);
+        public Task<IEnumerable<Product>> getAllProductsAsync
+            (PaginationParameters paginationParameters, string? search);
         public Task<Product?> getProductByIdAsync(int id);
         public Task<bool> isThereProductWithIdAsync(int id);
         public Task<Product> createNewProductAsync(Product product);
