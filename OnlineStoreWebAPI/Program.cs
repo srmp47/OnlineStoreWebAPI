@@ -6,6 +6,9 @@ using OnlineStoreWebAPI.Mapping;
 using OnlineStoreWebAPI.Repository;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using OnlineStoreWebAPI.GraphQL;
+using HotChocolate;
+using HotChocolate.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -51,6 +54,17 @@ builder.Services.AddAuthentication("Bearer")
     }
     );
 
+// Register GraphQL services
+builder.Services
+    .AddGraphQLServer()
+    .AddQueryType<UserQuery>()
+    .AddMutationType<UserMutation>()
+    .AddType<UserType>()
+    .AddType<UserCreateInputType>()
+    .AddType<UserUpdateInputType>();
+// Register UserRepository for direct injection (needed for GraphQL [Service] injection)
+builder.Services.AddScoped<UserRepository>();
+
 
 var app = builder.Build();
 
@@ -68,5 +82,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapGraphQL("/graphql");
 
 app.Run();
