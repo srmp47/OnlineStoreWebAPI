@@ -13,59 +13,72 @@ namespace OnlineStoreWebAPI.GraphQL
         //TODO: check validation of Data Annotations
         //(now you can create user with this pass:"a"=>minLength!?)
 
-        public async Task<string> ActivateUser(int id, [Service] UserRepository userRepository)
+        public async Task<User> ActivateUser(int id, [Service] UserRepository userRepository)
         {
-            var userExists = await userRepository.isThereUserWithIdAsync(id);
-            if (!userExists)
+            var user = await userRepository.getUserByIdAsync(id);
+            if (user == null)
             {
-                return "User input is incorrect and user not exists.";
+                throw new GraphQLException($"User with ID {id} not found.");
             }
             
             var result = await userRepository.activateUserByIdAsync(id);
-            return result ? "User activated successfully" : "Failed to activate user";
+            if (!result)
+            {
+                throw new GraphQLException("Failed to activate user.");
+            }
+            
+            return await userRepository.getUserByIdAsync(id);
         }
 
-        public async Task<string> DeactivateUser(int id, [Service] UserRepository userRepository)
+        public async Task<User> DeactivateUser(int id, [Service] UserRepository userRepository)
         {
-            var userExists = await userRepository.isThereUserWithIdAsync(id);
-            if (!userExists)
+            var user = await userRepository.getUserByIdAsync(id);
+            if (user == null)
             {
-                return "User input is incorrect and user not exists.";
+                throw new GraphQLException($"User with ID {id} not found.");
             }
             
             var result = await userRepository.deActivateUserByUserIdAsync(id);
-            return result ? "User deactivated successfully" : "Failed to deactivate user";
+            if (!result)
+            {
+                throw new GraphQLException("Failed to deactivate user.");
+            }
+            
+            return await userRepository.getUserByIdAsync(id);
         }
 
-        public async Task<string> DeleteUser(int id, [Service] UserRepository userRepository)
+        public async Task<User> DeleteUser(int id, [Service] UserRepository userRepository)
         {
-            var userExists = await userRepository.isThereUserWithIdAsync(id);
-            if (!userExists)
+            var user = await userRepository.getUserByIdAsync(id);
+            if (user == null)
             {
-                return "User input is incorrect and user not exists.";
+                throw new GraphQLException($"User with ID {id} not found.");
             }
             
             var deletedUser = await userRepository.deleteUserByIdAsync(id);
-            return deletedUser != null ? $"User {deletedUser.firstName} deleted successfully" : "Failed to delete user";
-        }
-
-        public async Task<string> CreateUser(UserWithoutIsActiveDTO inputUser, [Service] UserRepository userRepository, [Service] AutoMapper.IMapper mapper)
-        {
-            var user = mapper.Map<User>(inputUser);
-            var createdUser = await userRepository.createNewUserAsync(user);
-            return $"User {createdUser.firstName} created successfully with ID: {createdUser.userId}";
-        }
-
-        public async Task<string> UpdateUser(int id, UserUpdateDTO inputUser, [Service] UserRepository userRepository)
-        {
-            var userExists = await userRepository.isThereUserWithIdAsync(id);
-            if (!userExists)
+            if (deletedUser == null)
             {
-                return "User input is incorrect and user not exists.";
+                throw new GraphQLException("Failed to delete user.");
             }
             
-            var updatedUser = await userRepository.updateUserAsync(id, inputUser);
-            return $"User {updatedUser.firstName} updated successfully";
+            return deletedUser;
+        }
+
+        public async Task<User> CreateUser(UserWithoutIsActiveDTO inputUser, [Service] UserRepository userRepository, [Service] AutoMapper.IMapper mapper)
+        {
+            var user = mapper.Map<User>(inputUser);
+            return await userRepository.createNewUserAsync(user);
+        }
+
+        public async Task<User> UpdateUser(int id, UserUpdateDTO inputUser, [Service] UserRepository userRepository)
+        {
+            var user = await userRepository.getUserByIdAsync(id);
+            if (user == null)
+            {
+                throw new GraphQLException($"User with ID {id} not found.");
+            }
+            
+            return await userRepository.updateUserAsync(id, inputUser);
         }
     }
 } 

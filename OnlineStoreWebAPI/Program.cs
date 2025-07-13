@@ -59,11 +59,17 @@ builder.Services
     .AddGraphQLServer()
     .AddQueryType<UserQuery>()
     .AddMutationType<UserMutation>()
-    .AddType<UserType>()
-    .AddType<UserCreateInputType>()
-    .AddType<UserUpdateInputType>();
-// Register UserRepository for direct injection (needed for GraphQL [Service] injection)
+    .AddTypeExtension<ProductQuery>()
+    .AddTypeExtension<ProductMutation>()
+    .AddTypeExtension<OrderQuery>()
+    .AddTypeExtension<OrderMutation>()
+    .AddTypeExtension<OrderItemQuery>()
+    .AddTypeExtension<OrderItemMutation>();
+// Register repositories for direct injection (needed for GraphQL [Service] injection)
 builder.Services.AddScoped<UserRepository>();
+builder.Services.AddScoped<OrderRepository>();
+builder.Services.AddScoped<OrderItemRepository>();
+builder.Services.AddScoped<ProductRepository>();
 
 
 var app = builder.Build();

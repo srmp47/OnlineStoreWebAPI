@@ -9,7 +9,6 @@ namespace OnlineStoreWebAPI.GraphQL
     {
         public async Task<IEnumerable<User>> GetUsers([Service] UserRepository userRepository)
         {
-            // For simplicity, no pagination here
             return await userRepository.getAllUsersAsync(new Pagination.PaginationParameters { PageId = 1, PageSize = 100 });
         }
 
@@ -17,17 +16,14 @@ namespace OnlineStoreWebAPI.GraphQL
         {
             return await userRepository.getUserByIdAsync(id);
         }
-        public async Task<string> IsActiveUser(int id, [Service] UserRepository userRepository)
+        public async Task<bool> IsActiveUser(int id, [Service] UserRepository userRepository)
         {
-            // First check if user exists
-            var userExists = await userRepository.isThereUserWithIdAsync(id);
-            if (!userExists)
+            var user = await userRepository.getUserByIdAsync(id);
+            if (user == null)
             {
-                return "User input is incorrect and user not exists.";
+                throw new GraphQLException($"User with ID {id} not found.");
             }
-            
-            var isActive = await userRepository.isActiveUserWithIdAsync(id);
-            return isActive ? "User is active" : "User is not active";
+            return user.isActive;
         }
 
         public async Task<bool> IsUserExists(int id, [Service] UserRepository userRepository)

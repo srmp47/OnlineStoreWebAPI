@@ -2,6 +2,7 @@
 using OnlineStoreWebAPI.Model;
 using OnlineStoreWebAPI.DTO;
 using OnlineStoreWebAPI.Repository;
+using OnlineStoreWebAPI.GraphQL;
 
 namespace OnlineStoreWebAPI.Mapping
 {
@@ -22,6 +23,8 @@ namespace OnlineStoreWebAPI.Mapping
             CreateMap<ProductDTO, Product>();
             CreateMap<OrderDTO, Order>();
             CreateMap<OrderItemDTO, OrderItem>();
+            
+            
         }
     }
 }

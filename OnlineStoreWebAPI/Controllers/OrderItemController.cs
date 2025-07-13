@@ -48,7 +48,7 @@ namespace OnlineStoreWebAPI.Controllers
             if (!isValidProductId) return BadRequest("Product not exist"); 
             OrderItem orderItem = mapper.Map<OrderItem>(orderItemDTO);
             orderItem.OrderId = orderId;
-            orderItemRepository.setOrderAndProductInOrderItem(orderItem);
+            await orderItemRepository.setOrderAndProductInOrderItem(orderItem);
             if (!ModelState.IsValid) return BadRequest("Bad Request");
             var result = await orderItemRepository.createNewOrderItemAsync(orderItem);
             return Ok(result);
@@ -82,6 +82,7 @@ namespace OnlineStoreWebAPI.Controllers
         {
             var isValidId = await orderItemRepository.isThereOrderItemById(id);
             if (!isValidId) return NotFound("Order item not exist");
+            if (quantity < 0) return BadRequest("invalid quantity!");
             var orderItem = await orderItemRepository.changeQuantityByOrderItemId(id, quantity);
             return Ok(orderItem);
 

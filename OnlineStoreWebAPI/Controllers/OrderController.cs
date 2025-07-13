@@ -16,13 +16,16 @@ namespace OnlineStoreWebAPI.Controllers
         private readonly IMapper mapper;
         private readonly IOrderRepository orderRepository;
         private readonly IProductRepository productRepository;
+        private readonly IUserRepository userRepository;
 
         public OrderController(IMapper mapper, IOrderRepository orderRepository,
-            IProductRepository productRepository)
+            IProductRepository productRepository, IUserRepository userRepository)
         {
             this.mapper = mapper;
             this.orderRepository = orderRepository;
             this.productRepository = productRepository;
+            this.userRepository = userRepository;
+            this.userRepository = userRepository;
         }
         [HttpPatch("{id}/cancel")]
         public async Task<IActionResult> cancelOrderById(int id)
@@ -37,8 +40,10 @@ namespace OnlineStoreWebAPI.Controllers
             if (inputOrder == null) return BadRequest("input Order is null!");
             if (!ModelState.IsValid) return BadRequest("Bad Request");
             Order order = mapper.Map<Order>(inputOrder);
+            var isValidUserId = await  userRepository.isThereUserWithIdAsync(inputOrder.userId);
+            if (!isValidUserId) return NotFound("User not found");
             orderRepository.setUserInOrder(order);
-            if (inputOrder.orderItemDTOs.Count!=0 && inputOrder.orderItemDTOs != null )
+            if (inputOrder.orderItemDTOs != null && inputOrder.orderItemDTOs.Count!=0  )
             {
                 foreach (var orderItemDTO in inputOrder.orderItemDTOs)
                 {

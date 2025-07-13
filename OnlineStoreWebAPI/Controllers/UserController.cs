@@ -43,6 +43,7 @@ namespace OnlineStoreWebAPI.Controllers
                 return Ok(userWithoutOrders);
             }
         }
+        // TODO: implement patch document in patch methodes.
         [HttpPatch("{id}/Activate")]
         public async Task<IActionResult> activateUserById(int id)
         {
@@ -94,7 +95,7 @@ namespace OnlineStoreWebAPI.Controllers
             else return Ok("There is not");
             
         }
-        [HttpPost("{id}/Update")]
+        [HttpPut("{id}/Update")]
         public async Task<IActionResult> updateUser(int id,[FromBody] UserUpdateDTO user)
         {
             if (user == null) return BadRequest("User is null");

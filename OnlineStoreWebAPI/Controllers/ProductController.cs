@@ -64,7 +64,7 @@ namespace OnlineStoreWebAPI.Controllers
 
         }
         // Update is not fully implemented 
-        [HttpPost("{id}/Update")]
+        [HttpPut("{id}/Update")]
         public async Task<IActionResult> updateProduct(int id, [FromBody] ProductUpdateDTO product)
         {
             if (product == null) return BadRequest("Product is null");
