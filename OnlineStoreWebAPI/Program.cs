@@ -9,6 +9,8 @@ using System.Text;
 using OnlineStoreWebAPI.GraphQL;
 using HotChocolate;
 using HotChocolate.AspNetCore;
+using OnlineStoreWebAPI.Authorize;
+using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -54,6 +56,7 @@ builder.Services.AddAuthentication("Bearer")
     }
     );
 
+
 // Register GraphQL services
 builder.Services
     .AddGraphQLServer()
@@ -84,6 +87,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
+
 
 app.UseAuthorization();
 

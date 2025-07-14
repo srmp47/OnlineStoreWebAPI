@@ -33,6 +33,7 @@ namespace OnlineStoreWebAPI.Controllers
             {
                 return Unauthorized();
             }
+            Console.WriteLine(user.role);
 
             var securityKey = new SymmetricSecurityKey(
                 Encoding.ASCII.GetBytes(configuration["Authentication:SecretForKey"])
@@ -43,6 +44,7 @@ namespace OnlineStoreWebAPI.Controllers
             var claimsForToken = new List<Claim>();
             claimsForToken.Add(new Claim("userId", user.userId.ToString()));
             claimsForToken.Add(new Claim("password", user.password));
+            claimsForToken.Add(new Claim(ClaimTypes.Role,user.role));
 
             var jwtSecurityToke = new JwtSecurityToken(
                 configuration["Authentication:Issuer"],
@@ -61,9 +63,13 @@ namespace OnlineStoreWebAPI.Controllers
         private User? ValidateUserCredentials(int id,
             string? password)
         {
-            if (password == "93589358" && id == 27)
-                return context.Users.FirstOrDefault(u => u.userId == id);
-            return null;
+            
+            //if (password == "93589358" && id == 27)
+            //    return context.Users.FirstOrDefault(u => u.userId == id);
+            //return null;
+            var user = context.Users
+                .FirstOrDefault(u => u.userId == id && u.password == password);
+            return user;
         }
 
 

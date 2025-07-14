@@ -11,7 +11,7 @@ namespace OnlineStoreWebAPI.Controllers
 {
     [Route("api/User")]
     [ApiController]
-    [Authorize]
+    [Authorize(Roles ="Admin")]
     public class UserController : ControllerBase
     {
         private readonly IMapper mapper;
@@ -25,6 +25,7 @@ namespace OnlineStoreWebAPI.Controllers
         public async Task<ActionResult<IEnumerable<User>>> getAllUsers
             ([FromQuery] PaginationParameters paginationParameters)
         {
+
             var result = await userRepository.getAllUsersAsync(paginationParameters);
             if (result == null) return NoContent();
             return Ok(result);
@@ -79,6 +80,9 @@ namespace OnlineStoreWebAPI.Controllers
             if (success) return Ok("User De Activated Successfully");
             else return NotFound("User Not Found!");
         }
+        // TODO implement that user can only see his/her information . not for other users.
+        // for this , you should undrestand that which user is logged in and send request.
+        
         [HttpGet("{id}/isActive")]
         public async Task<IActionResult> isActiveUserById(int id)
         {

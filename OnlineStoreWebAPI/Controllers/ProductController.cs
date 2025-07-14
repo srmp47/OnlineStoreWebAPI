@@ -10,7 +10,7 @@ namespace OnlineStoreWebAPI.Controllers
 {
     [Route("api/Product")]
     [ApiController]
-    [Authorize]
+    
     public class ProductController: ControllerBase
     {
         private readonly IMapper mapper;
@@ -20,6 +20,7 @@ namespace OnlineStoreWebAPI.Controllers
             this.mapper = mapper;
             this.productRepository = productRepository;
         }
+        [Authorize(Roles = "Admin")]
         [HttpPost("AddProduct")]
         public async Task<IActionResult> createNewProduct(ProductDTO inputProduct)
         {
@@ -31,6 +32,7 @@ namespace OnlineStoreWebAPI.Controllers
             return Ok(result);
         }
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> deleteProductById(int id)
         {
             var isValidId = await productRepository.isThereProductWithIdAsync(id);
@@ -39,6 +41,7 @@ namespace OnlineStoreWebAPI.Controllers
             return Ok(result);
 
         }
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Product>>> getAllProducts
             ([FromQuery]PaginationParameters paginationParameters, [FromQuery]string? search)
@@ -49,6 +52,7 @@ namespace OnlineStoreWebAPI.Controllers
 
         }
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<IActionResult> getProductById(int id)
         {
             var product = await productRepository.getProductByIdAsync(id);
@@ -57,6 +61,7 @@ namespace OnlineStoreWebAPI.Controllers
             
         }
         [HttpGet("{id}/isThere")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> isThereProductWithId(int id)
         {
             if (await productRepository.isThereProductWithIdAsync(id)) return Ok("There is");
@@ -65,6 +70,7 @@ namespace OnlineStoreWebAPI.Controllers
         }
         // Update is not fully implemented 
         [HttpPut("{id}/Update")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> updateProduct(int id, [FromBody] ProductUpdateDTO product)
         {
             if (product == null) return BadRequest("Product is null");

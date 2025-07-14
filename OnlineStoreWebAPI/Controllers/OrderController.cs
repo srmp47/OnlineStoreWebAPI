@@ -10,7 +10,7 @@ namespace OnlineStoreWebAPI.Controllers
 {
     [Route("api/Order")]
     [ApiController]
-    [Authorize]
+    
     public class OrderController:ControllerBase
     {
         private readonly IMapper mapper;
@@ -28,12 +28,16 @@ namespace OnlineStoreWebAPI.Controllers
             this.userRepository = userRepository;
         }
         [HttpPatch("{id}/cancel")]
+        //TODO user can only cancel his/her orders. 
+        [Authorize]
         public async Task<IActionResult> cancelOrderById(int id)
         {
             if (!await orderRepository.isThereOrderByIdAsync(id)) return NotFound("Order not exist");
             await orderRepository.cancelOrderByIdAsync(id);
             return Ok("Cancelled successfully");
         }
+        [Authorize]
+        // TODO user can only create his/her orders.
         [HttpPost("AddOrder")]
         public async Task<IActionResult> createNewOrder(OrderDTO inputOrder)
         {
@@ -60,6 +64,7 @@ namespace OnlineStoreWebAPI.Controllers
             return Ok(result);
         }
         [HttpGet]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<IEnumerable<Order>>> getAllOrders
             ([FromQuery]PaginationParameters paginationParameters)
         {
@@ -68,6 +73,7 @@ namespace OnlineStoreWebAPI.Controllers
             return Ok(result);
         }
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> getOrderById(int id)
         {
             var order = await orderRepository.getOrderByOrderIdAsync(id);
@@ -76,6 +82,8 @@ namespace OnlineStoreWebAPI.Controllers
 
         }
         [HttpGet("Orders of User/{userId}")]
+        [Authorize]
+        //TODO user can only see his/her orders.
         public async Task<IActionResult> getAllOrdersOfUserById
             (int userId, [FromQuery]PaginationParameters paginationParameters)
         {
@@ -83,6 +91,7 @@ namespace OnlineStoreWebAPI.Controllers
             if (orders == null) return NotFound();
             return Ok(orders);
         }
+        [Authorize(Roles = "Admin")]
         [HttpGet("{id}/isThere")]
         public async Task<IActionResult> isThereOrderWithId(int id)
         {
@@ -91,6 +100,8 @@ namespace OnlineStoreWebAPI.Controllers
 
         }
         [HttpDelete("{id}")]
+        [Authorize]
+        //TODO user can only delete his/her orders.
         public async Task<IActionResult> deleteOrderById(int id)
         {
             var isValidId = await orderRepository.isThereOrderByIdAsync(id);
@@ -100,6 +111,8 @@ namespace OnlineStoreWebAPI.Controllers
 
         }
         [HttpGet("OrderItemsOfOrder/{orderId}")]
+        [Authorize]
+        //TODO user can only see his/her order items.
         public async Task<IActionResult> getAllOrderItemsByOrderId(int orderId)
         {
             var isValidId = await orderRepository.isThereOrderByIdAsync(orderId);
@@ -108,6 +121,7 @@ namespace OnlineStoreWebAPI.Controllers
             return Ok(result);
         }
         [HttpPatch("{id}/changeStatus/{status}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> changeOrderStatusByOrderId(int id,OrderStatus status)
         {
             var isValidId = await orderRepository.isThereOrderByIdAsync(id);

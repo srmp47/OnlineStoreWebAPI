@@ -10,7 +10,6 @@ namespace OnlineStoreWebAPI.Controllers
 {
     [Route("api/OrderItem")]
     [ApiController]
-    [Authorize]
     public class OrderItemController:ControllerBase
     {
         private readonly IMapper mapper;
@@ -28,6 +27,7 @@ namespace OnlineStoreWebAPI.Controllers
         [HttpGet]
         //implement authentication :
         //[Authorize(Roles = "Admin,User")] , ....
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<IEnumerable<Product>>> getAllOrderItems
             ([FromQuery]PaginationParameters paginationParameters)
         {
@@ -36,6 +36,7 @@ namespace OnlineStoreWebAPI.Controllers
             return Ok(result);
 
         }
+        [Authorize]
         [HttpPost("AddOrderItem/{orderId}")]
         public async Task<IActionResult> createNewOrderItem(int orderId , OrderItemDTO orderItemDTO)
         {
@@ -53,6 +54,8 @@ namespace OnlineStoreWebAPI.Controllers
             var result = await orderItemRepository.createNewOrderItemAsync(orderItem);
             return Ok(result);
         }
+        // TODO user should can only delete his/her order items.
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> deleteOrderItemById(int id)
         {
@@ -62,6 +65,7 @@ namespace OnlineStoreWebAPI.Controllers
             return Ok(result);
 
         }
+        [Authorize(Roles = "Admin")]
         [HttpGet("{id}")]
         public async Task<IActionResult> getOrderItemById(int id)
         {
@@ -70,6 +74,7 @@ namespace OnlineStoreWebAPI.Controllers
             return Ok(orderItem);
 
         }
+        [Authorize(Roles = "Admin")]
         [HttpGet("{id}/isThere")]
         public async Task<IActionResult> isThereOrderItemWithId(int id)
         {
@@ -77,7 +82,9 @@ namespace OnlineStoreWebAPI.Controllers
             else return Ok("There is not");
 
         }
+        //TODO user should can only change quantity of his/her order items.
         [HttpPatch("{id}/changeQuantity/{quantity}")]
+        [Authorize]
         public async Task<IActionResult> changeQuantityByOrderItemId(int id,int quantity)
         {
             var isValidId = await orderItemRepository.isThereOrderItemById(id);

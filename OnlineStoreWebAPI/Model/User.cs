@@ -27,7 +27,9 @@ namespace OnlineStoreWebAPI.Model
         [MaxLength(200)]
         public string? address { get; set; }
         [Required]
-        public bool isActive { get; set; } = false; 
+        public bool isActive { get; set; } = false;
+        [Required]
+        public string role { get; set; } = "Customer"; 
         public ICollection<Order>? orders { get; set; } 
     }
 }
