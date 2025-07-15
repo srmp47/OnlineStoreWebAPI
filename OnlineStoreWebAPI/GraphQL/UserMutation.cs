@@ -5,6 +5,8 @@ using OnlineStoreWebAPI.Repository;
 using OnlineStoreWebAPI.DTO;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System.ComponentModel.DataAnnotations;
+using HotChocolate.Authorization;
+using System.Security.Claims;
 namespace OnlineStoreWebAPI.GraphQL
 {
     public class UserMutation
@@ -12,7 +14,7 @@ namespace OnlineStoreWebAPI.GraphQL
 
         //TODO: check validation of Data Annotations
         //(now you can create user with this pass:"a"=>minLength!?)
-
+        [Authorize(Roles = new[] { "Admin" })]
         public async Task<User> ActivateUser(int id, [Service] UserRepository userRepository)
         {
             var user = await userRepository.getUserByIdAsync(id);
@@ -29,7 +31,7 @@ namespace OnlineStoreWebAPI.GraphQL
             
             return await userRepository.getUserByIdAsync(id);
         }
-
+        [Authorize(Roles = new[] { "Admin" })]
         public async Task<User> DeactivateUser(int id, [Service] UserRepository userRepository)
         {
             var user = await userRepository.getUserByIdAsync(id);
@@ -46,7 +48,7 @@ namespace OnlineStoreWebAPI.GraphQL
             
             return await userRepository.getUserByIdAsync(id);
         }
-
+        [Authorize(Roles = new[] { "Admin" })]
         public async Task<User> DeleteUser(int id, [Service] UserRepository userRepository)
         {
             var user = await userRepository.getUserByIdAsync(id);
@@ -63,22 +65,23 @@ namespace OnlineStoreWebAPI.GraphQL
             
             return deletedUser;
         }
-
+        //TODO implement signup
+        [Authorize(Roles = new[] { "Admin" })]
         public async Task<User> CreateUser(UserWithoutIsActiveDTO inputUser, [Service] UserRepository userRepository, [Service] AutoMapper.IMapper mapper)
         {
             var user = mapper.Map<User>(inputUser);
             return await userRepository.createNewUserAsync(user);
         }
-
-        public async Task<User> UpdateUser(int id, UserUpdateDTO inputUser, [Service] UserRepository userRepository)
+        [Authorize]
+        public async Task<User> UpdateUser(ClaimsPrincipal claims, UserUpdateDTO inputUser, [Service] UserRepository userRepository)
         {
-            var user = await userRepository.getUserByIdAsync(id);
-            if (user == null)
+            int userId = Convert.ToInt32(claims.Claims.FirstOrDefault(c => c.Type == "userId")?.Value);
+            if (await userRepository.isThereUserWithIdAsync(userId))
             {
-                throw new GraphQLException($"User with ID {id} not found.");
+                throw new GraphQLException($"User with ID {userId} not found.");
             }
             
-            return await userRepository.updateUserAsync(id, inputUser);
+            return await userRepository.updateUserAsync(userId, inputUser);
         }
     }
 } 

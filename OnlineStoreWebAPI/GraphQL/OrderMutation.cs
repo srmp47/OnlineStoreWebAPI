@@ -1,8 +1,10 @@
 using HotChocolate;
+using HotChocolate.Authorization;
 using HotChocolate.Types;
 using OnlineStoreWebAPI.DTO;
 using OnlineStoreWebAPI.Model;
 using OnlineStoreWebAPI.Repository;
+using System.Security.Claims;
 
 namespace OnlineStoreWebAPI.GraphQL
 {
@@ -10,16 +12,19 @@ namespace OnlineStoreWebAPI.GraphQL
 
     public class OrderMutation
     {
+        [Authorize]
         public async Task<Order> CreateOrder
-            (OrderDTO inputOrder, [Service] OrderRepository orderRepository,
+            (ClaimsPrincipal claims ,OrderDTO inputOrder, [Service] OrderRepository orderRepository,
             [Service] AutoMapper.IMapper mapper, [Service]ProductRepository productRepository,
             [Service]UserRepository userRepository)
         {
             if (inputOrder == null) throw new GraphQLException("enter input!");
             var order = mapper.Map<Order>(inputOrder);
-            var isValidUserId = await userRepository.isThereUserWithIdAsync(inputOrder.userId);
+            int userId = Convert.ToInt32(claims.Claims.FirstOrDefault(c => c.Type == "userId")?.Value);
+
+            var isValidUserId = await userRepository.isThereUserWithIdAsync(userId);
             if (!isValidUserId) throw new GraphQLException("User not found");
-            await orderRepository.setUserInOrder(order);
+            await orderRepository.setUserInOrder(order, userId);
             if (inputOrder.orderItemDTOs != null && inputOrder.orderItemDTOs.Count != 0 )
             {
                 foreach (var orderItemDTO in inputOrder.orderItemDTOs)
@@ -36,7 +41,7 @@ namespace OnlineStoreWebAPI.GraphQL
             }
             return await orderRepository.createNewOrderAsync(order);
         }
-         
+
         //public async Task<Order> UpdateOrder(int orderId, OrderUpdateInputType input, [Service] OrderRepository orderRepository, [Service] AutoMapper.IMapper mapper)
         //{
         //    var existingOrder = await orderRepository.getOrderByOrderIdAsync(orderId);
@@ -49,7 +54,7 @@ namespace OnlineStoreWebAPI.GraphQL
         //    order.OrderId = orderId;
         //    return await orderRepository.updateOrderAsync(order);
         //}
-
+        [Authorize(Roles = new[] { "Admin" })]
         public async Task<Order> DeleteOrder(int id, [Service] OrderRepository orderRepository)
         {
             var order = await orderRepository.getOrderByOrderIdAsync(id);
@@ -60,19 +65,23 @@ namespace OnlineStoreWebAPI.GraphQL
 
             return await orderRepository.deleteOrderByIdAsync(id);
         }
-
-        public async Task<Order> CancelOrder(int id, [Service] OrderRepository orderRepository)
+        [Authorize]
+        public async Task<Order> CancelOrder
+            (int orderId,[Service] OrderRepository orderRepository,ClaimsPrincipal claims)
         {
-            var order = await orderRepository.getOrderByOrderIdAsync(id);
+            int userId = Convert.ToInt32(claims.Claims.FirstOrDefault(c => c.Type == "userId")?.Value);
+            var order = await orderRepository.getOrderByOrderIdAsync(orderId);
             if (order == null)
             {
-                throw new GraphQLException($"Order with ID {id} not found.");
+                throw new GraphQLException($"Order with ID {userId} not found.");
             }
+            if(order.userId != userId)
+                throw new GraphQLException("You can not cancel this order, because you are not owner of this order!");
 
-            await orderRepository.cancelOrderByIdAsync(id);
-            return await orderRepository.getOrderByOrderIdAsync(id);
+            await orderRepository.cancelOrderByIdAsync(orderId);
+            return await orderRepository.getOrderByOrderIdAsync(orderId);
         }
-
+        [Authorize(Roles = new[] { "Admin" })]
         public async Task<Order> ChangeOrderStatus(int id, OrderStatus status, [Service] OrderRepository orderRepository)
         {
             var order = await orderRepository.getOrderByOrderIdAsync(id);

@@ -9,8 +9,8 @@ using System.Text;
 using OnlineStoreWebAPI.GraphQL;
 using HotChocolate;
 using HotChocolate.AspNetCore;
-using OnlineStoreWebAPI.Authorize;
 using Microsoft.AspNetCore.Authorization;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -56,10 +56,11 @@ builder.Services.AddAuthentication("Bearer")
     }
     );
 
-
+builder.Services.AddAuthorization();
 // Register GraphQL services
 builder.Services
     .AddGraphQLServer()
+    .AddAuthorization()
     .AddQueryType<UserQuery>()
     .AddMutationType<UserMutation>()
     .AddTypeExtension<ProductQuery>()

@@ -2,16 +2,18 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using OnlineStoreWebAPI.DTO;
 using OnlineStoreWebAPI.Model;
 using OnlineStoreWebAPI.Pagination;
 using OnlineStoreWebAPI.Repository;
+using System.ComponentModel.DataAnnotations;
 
 namespace OnlineStoreWebAPI.Controllers
 {
     [Route("api/User")]
     [ApiController]
-    [Authorize(Roles ="Admin")]
+
     public class UserController : ControllerBase
     {
         private readonly IMapper mapper;
@@ -22,6 +24,7 @@ namespace OnlineStoreWebAPI.Controllers
             this.userRepository = userRepository;
         }
         [HttpGet]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<IEnumerable<User>>> getAllUsers
             ([FromQuery] PaginationParameters paginationParameters)
         {
@@ -29,10 +32,11 @@ namespace OnlineStoreWebAPI.Controllers
             var result = await userRepository.getAllUsersAsync(paginationParameters);
             if (result == null) return NoContent();
             return Ok(result);
-           
+
 
         }
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> getUserById(int id, bool showOrders)
         {
             var user = await userRepository.getUserByIdAsync(id);
@@ -46,21 +50,26 @@ namespace OnlineStoreWebAPI.Controllers
         }
         // TODO: implement patch document in patch methodes.
         [HttpPatch("{id}/Activate")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> activateUserById(int id)
         {
             var success = await userRepository.activateUserByIdAsync(id);
-            if(success) return Ok("User Activated Successfully");
+            if (success) return Ok("User Activated Successfully");
             else return NotFound("User Not Found!");
         }
         [HttpDelete("{id}")]
-        public async  Task<IActionResult> deleteUserById(int id){
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> deleteUserById(int id)
+        {
             var isValidId = await userRepository.isThereUserWithIdAsync(id);
             if (!isValidId) return NotFound("User not exist");
             var result = await userRepository.deleteUserByIdAsync(id);
             return Ok(result);
-            
+
         }
+        // implement sign up
         [HttpPost("AddUser")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> createNewUser([FromBody] UserWithoutIsActiveDTO inputUser)
         {
             if (inputUser == null) return BadRequest("User is null");
@@ -73,6 +82,7 @@ namespace OnlineStoreWebAPI.Controllers
                 return Ok("User Added successfully!");
             }
         }
+        [Authorize(Roles = "Admin")]
         [HttpPatch("{id}/DeActivate")]
         public async Task<IActionResult> deActivateUserById(int id)
         {
@@ -82,7 +92,7 @@ namespace OnlineStoreWebAPI.Controllers
         }
         // TODO implement that user can only see his/her information . not for other users.
         // for this , you should undrestand that which user is logged in and send request.
-        
+        [Authorize(Roles = "Admin")]
         [HttpGet("{id}/isActive")]
         public async Task<IActionResult> isActiveUserById(int id)
         {
@@ -92,16 +102,20 @@ namespace OnlineStoreWebAPI.Controllers
             if (isActive) return Ok("User is active");
             else return Ok("User is not active");
         }
+        [Authorize(Roles = "Admin")]
         [HttpGet("{id}/isThere")]
         public async Task<IActionResult> isThereUserWithId(int id)
         {
-            if ( await userRepository.isThereUserWithIdAsync(id)) return Ok("There is");
+            if (await userRepository.isThereUserWithIdAsync(id)) return Ok("There is");
             else return Ok("There is not");
-            
+
         }
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}/Update")]
-        public async Task<IActionResult> updateUser(int id,[FromBody] UserUpdateDTO user)
+        // just admin can update other  users information.
+        public async Task<IActionResult> updateUserById(int id, [FromBody] UserUpdateDTO user)
         {
+
             if (user == null) return BadRequest("User is null");
             if (!ModelState.IsValid) return BadRequest("Enter Valid Information");
             var isValidId = await userRepository.isThereUserWithIdAsync(id);
@@ -109,12 +123,53 @@ namespace OnlineStoreWebAPI.Controllers
             if (!ModelState.IsValid) return BadRequest("Enter Valid Information");
             else
             {
-                var result = await userRepository.updateUserAsync(id,user);
+                var result = await userRepository.updateUserAsync(id, user);
                 return Ok(result);
             }
         }
+        [Authorize]
+        [HttpPost("Update")]
+        public async Task<IActionResult> updateUser([FromBody] UserUpdateDTO user)
+        {
+            if (user == null) return BadRequest("User is null");
+            if (!ModelState.IsValid) return BadRequest("Enter Valid Information");
+            else
+            {
+                //var claim = User.Claims.FirstOrDefault(u => u.Type == "userId");
+                var claimId = User.Claims.FirstOrDefault(u => u.Type == "userId");
+                int id = Convert.ToInt32(claimId.Value);
+                var result = await userRepository.updateUserAsync(id, user);
+                return Ok(result);
+            }
 
 
 
+        }
+        [Authorize]
+
+        [HttpGet("show my information")]
+        // TODO make it async
+        public async Task<IActionResult> getMyInformation()
+        {
+            var claimId = User.Claims.FirstOrDefault(u => u.Type == "userId");
+            int id = Convert.ToInt32(claimId.Value);
+            var user = await userRepository.getUserByIdAsync(id);
+            if (user == null) return NotFound("User Not Found");
+            return Ok(user);
+        }
+        [HttpPost("SignUp")]
+        public async Task<IActionResult> signup([FromBody] UserWithoutIsActiveDTO inputUser)
+        {
+            if (inputUser == null) return BadRequest("User is null");
+            if (!ModelState.IsValid) return BadRequest("Enter Valid Information");
+            var user = mapper.Map<User>(inputUser);
+            if (!ModelState.IsValid) return BadRequest("Enter Valid Information");
+            else
+            {
+                await userRepository.createNewUserAsync(user);
+                return Ok("User Added successfully!");
+            }
+        }
     }
-}
+    }
+

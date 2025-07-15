@@ -1,4 +1,5 @@
 ﻿using HotChocolate;
+using HotChocolate.Authorization;
 using HotChocolate.Types;
 using OnlineStoreWebAPI.DTO;
 using OnlineStoreWebAPI.Model;
@@ -11,7 +12,7 @@ namespace OnlineStoreWebAPI.GraphQL
     {
         //TODO: check validation of Data Annotations
 
-
+        [Authorize(Roles = new[] { "Admin" })]
         public async Task<Product> DeleteProduct(int id, [Service] IProductRepository productRepository)
         {
             var product = await productRepository.getProductByIdAsync(id);
@@ -28,7 +29,7 @@ namespace OnlineStoreWebAPI.GraphQL
 
             return deletedProduct;
         }
-
+        [Authorize(Roles = new[] { "Admin" })]
         public async Task<Product> CreateProduct
             (ProductDTO input, [Service] IProductRepository productRepository,
             [Service] AutoMapper.IMapper mapper)
@@ -37,7 +38,7 @@ namespace OnlineStoreWebAPI.GraphQL
             var product = mapper.Map<Product>(input);
             return await productRepository.createNewProductAsync(product);
         }
-
+        [Authorize(Roles = new[] { "Admin" })]
         public async Task<Product> UpdateProduct
             (int id, ProductUpdateDTO input, [Service] IProductRepository productRepository,
             [Service] AutoMapper.IMapper mapper)

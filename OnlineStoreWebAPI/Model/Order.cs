@@ -23,7 +23,7 @@ namespace OnlineStoreWebAPI.Model
         public int userId { get; set; }
         public User User { get; set; }
         [Required]
-        public DateTime date { get; set; }
+        public DateTime date { get; set; } = DateTime.Now;
         [Range(0, double.MaxValue)]
         public double totalAmount { get; set; } = 0;
         public ICollection<OrderItem> orderItems { get; set; } = new List<OrderItem>();

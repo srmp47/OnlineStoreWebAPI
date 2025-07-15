@@ -25,8 +25,6 @@ namespace OnlineStoreWebAPI.Controllers
             this.productRepository = productRepository;
         }
         [HttpGet]
-        //implement authentication :
-        //[Authorize(Roles = "Admin,User")] , ....
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<IEnumerable<Product>>> getAllOrderItems
             ([FromQuery]PaginationParameters paginationParameters)
@@ -40,13 +38,18 @@ namespace OnlineStoreWebAPI.Controllers
         [HttpPost("AddOrderItem/{orderId}")]
         public async Task<IActionResult> createNewOrderItem(int orderId , OrderItemDTO orderItemDTO)
         {
-            if (orderItemDTO == null) return BadRequest("input product is null!");
+            if (orderItemDTO == null) return BadRequest("input order item is null!");
             if (!ModelState.IsValid) return BadRequest("Bad Request");
             var isValidOrderId = await orderRepository.isThereOrderByIdAsync(orderId);
             if (!isValidOrderId) return BadRequest("Order not exist");
             var isValidProductId = await productRepository.
                 isThereProductWithIdAsync(orderItemDTO.productId);
-            if (!isValidProductId) return BadRequest("Product not exist"); 
+            if (!isValidProductId) return BadRequest("Product not exist");
+            var claimId = User.Claims.FirstOrDefault(u => u.Type == "userId");
+            int currentUserId = Convert.ToInt32(claimId);
+            var order = await orderRepository.getOrderByOrderIdAsync(orderId);
+            if (order == null || order.userId != currentUserId)
+                return BadRequest("You can not add item to this order");
             OrderItem orderItem = mapper.Map<OrderItem>(orderItemDTO);
             orderItem.OrderId = orderId;
             await orderItemRepository.setOrderAndProductInOrderItem(orderItem);
@@ -54,13 +57,17 @@ namespace OnlineStoreWebAPI.Controllers
             var result = await orderItemRepository.createNewOrderItemAsync(orderItem);
             return Ok(result);
         }
-        // TODO user should can only delete his/her order items.
+        // user should can only delete his/her order items.
         [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> deleteOrderItemById(int id)
         {
-            var isValidId = await orderItemRepository.isThereOrderItemById(id);
-            if (!isValidId) return NotFound("Order item not exist");
+            var claimId = User.Claims.FirstOrDefault(u => u.Type == "userId");
+            int currentUserId = Convert.ToInt32(claimId);
+            var orderItem = await orderItemRepository.getOrderItemByOrderItemId(id);
+            if (orderItem == null || orderItem.Order.userId != currentUserId)  
+                return BadRequest("You can not delete this order item");
+
             var result = await orderItemRepository.deleteOrderItemByIdAsync(id);
             return Ok(result);
 
@@ -82,15 +89,20 @@ namespace OnlineStoreWebAPI.Controllers
             else return Ok("There is not");
 
         }
-        //TODO user should can only change quantity of his/her order items.
         [HttpPatch("{id}/changeQuantity/{quantity}")]
         [Authorize]
         public async Task<IActionResult> changeQuantityByOrderItemId(int id,int quantity)
         {
-            var isValidId = await orderItemRepository.isThereOrderItemById(id);
-            if (!isValidId) return NotFound("Order item not exist");
-            if (quantity < 0) return BadRequest("invalid quantity!");
-            var orderItem = await orderItemRepository.changeQuantityByOrderItemId(id, quantity);
+            var claimId = User.Claims.FirstOrDefault(u => u.Type == "userId");
+            int currentUserId = Convert.ToInt32(claimId);
+            var orderItem = await orderItemRepository.getOrderItemByOrderItemId(id);
+            if (orderItem == null || orderItem.Order.userId != currentUserId)
+            {
+                return BadRequest("you don't have this order item");
+            }
+            if (quantity < 0 || quantity > orderItem.Product.StockQuantity)
+                return BadRequest("there is not this number of products");
+            var result = await orderItemRepository.changeQuantityByOrderItemId(id, quantity);
             return Ok(orderItem);
 
         }

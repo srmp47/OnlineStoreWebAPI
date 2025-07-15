@@ -88,9 +88,10 @@ namespace OnlineStoreWebAPI.Repository
             return order;
         }
         //in this function , I set User in Order by user id
-        public async Task setUserInOrder(Order order)
+        public async Task setUserInOrder(Order order, int userId)
         {
-            order.User = await context.Users.FirstOrDefaultAsync(o => o.userId == order.userId);
+            order.userId = userId;
+            order.User = await context.Users.FirstOrDefaultAsync(o => o.userId == userId);
         }
         public async Task setOrderAndProductInOrderItem(OrderItem orderItem)
         {

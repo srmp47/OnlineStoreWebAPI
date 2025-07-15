@@ -10,8 +10,8 @@ namespace OnlineStoreWebAPI.Controllers
 {
     [Route("api/Product")]
     [ApiController]
-    
-    public class ProductController: ControllerBase
+
+    public class ProductController : ControllerBase
     {
         private readonly IMapper mapper;
         private readonly IProductRepository productRepository;
@@ -27,7 +27,7 @@ namespace OnlineStoreWebAPI.Controllers
             if (inputProduct == null) return BadRequest("input product is null!");
             if (!ModelState.IsValid) return BadRequest("Bad Request");
             Product product = mapper.Map<Product>(inputProduct);
-            if(!ModelState.IsValid) return BadRequest("Bad Request");
+            if (!ModelState.IsValid) return BadRequest("Bad Request");
             var result = await productRepository.createNewProductAsync(product);
             return Ok(result);
         }
@@ -44,9 +44,9 @@ namespace OnlineStoreWebAPI.Controllers
         [Authorize]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Product>>> getAllProducts
-            ([FromQuery]PaginationParameters paginationParameters, [FromQuery]string? search)
+            ([FromQuery] PaginationParameters paginationParameters, [FromQuery] string? search)
         {
-            var result = await productRepository.getAllProductsAsync(paginationParameters,search);
+            var result = await productRepository.getAllProductsAsync(paginationParameters, search);
             if (result == null) return NoContent();
             return Ok(result);
 
@@ -58,7 +58,7 @@ namespace OnlineStoreWebAPI.Controllers
             var product = await productRepository.getProductByIdAsync(id);
             if (product == null) return NotFound();
             return Ok(product);
-            
+
         }
         [HttpGet("{id}/isThere")]
         [Authorize(Roles = "Admin")]
@@ -68,7 +68,7 @@ namespace OnlineStoreWebAPI.Controllers
             else return Ok("There is not");
 
         }
-        // Update is not fully implemented 
+
         [HttpPut("{id}/Update")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> updateProduct(int id, [FromBody] ProductUpdateDTO product)
@@ -80,10 +80,18 @@ namespace OnlineStoreWebAPI.Controllers
             if (!ModelState.IsValid) return BadRequest("Enter Valid Information");
             else
             {
-                var result = await productRepository.updateProductAsync(id,product);
+                var result = await productRepository.updateProductAsync(id, product);
                 return Ok(result);
             }
         }
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> getStockQuantityOfProduct(int id)
+        {
+            var product = await productRepository.getProductByIdAsync(id);
+            if (product == null) return NotFound("Product not found");
+            return Ok(product.StockQuantity);
 
+        }
     }
 }

@@ -14,7 +14,7 @@ namespace OnlineStoreWebAPI.Repository
         public Task<Order> createNewOrderAsync(Order order);
         public Task<Order> updateOrderAsync(Order order);
         public Task cancelOrderByIdAsync(int id);
-        public Task setUserInOrder(Order order);
+        public Task setUserInOrder(Order order,int userId);
         public Task setOrderAndProductInOrderItem(OrderItem orderItem);
         public Task<Order> deleteOrderByIdAsync(int id);
         public  Task<IEnumerable<OrderItem>> getAllOrderItemsByOrderIdAsync(int orderId);

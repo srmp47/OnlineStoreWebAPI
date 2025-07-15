@@ -1,25 +1,35 @@
 using HotChocolate;
+using HotChocolate.Authorization;
 using HotChocolate.Types;
 using Microsoft.AspNetCore.Mvc;
 using OnlineStoreWebAPI.DTO;
 using OnlineStoreWebAPI.Model;
 using OnlineStoreWebAPI.Repository;
+using System.Security.Claims;
 
 namespace OnlineStoreWebAPI.GraphQL
 {
     [ExtendObjectType(typeof(UserMutation))]
     public class OrderItemMutation
     {
+        [Authorize]
         public async Task<OrderItem> CreateOrderItem
             (int orderId,OrderItemDTO input, [Service] OrderItemRepository orderItemRepository,
             [Service] AutoMapper.IMapper mapper, [Service]OrderRepository orderRepository,
-            [Service]ProductRepository productRepository)
+            [Service]ProductRepository productRepository,ClaimsPrincipal claims)
         {
             if (input == null) throw new GraphQLException("input product is null!");
             var isValidOrderId = await orderRepository.isThereOrderByIdAsync(orderId);
+            if(!isValidOrderId) throw new GraphQLException("Invalid order!");
             var isValidProductId = await productRepository.
                 isThereProductWithIdAsync(input.productId);
             if (!isValidProductId) throw new GraphQLException("Invalid product!");
+            int userId = Convert.ToInt32(claims.Claims.FirstOrDefault(c => c.Type == "userId")?.Value);
+            var order = await  orderRepository.getOrderByOrderIdAsync(orderId);
+            if(order.userId != userId)
+            {
+                throw new GraphQLException("You can not add item to this orderthis order is not for you");
+            }
             var orderItem = mapper.Map<OrderItem>(input);
             orderItem.OrderId = orderId;
             await orderItemRepository.setOrderAndProductInOrderItem(orderItem);
@@ -38,31 +48,41 @@ namespace OnlineStoreWebAPI.GraphQL
         //    orderItem.OrderItemId = orderItemId;
         //    return await orderItemRepository.updateOrderItemAsync(orderItem);
         //}
-
+        [Authorize]
         public async Task<OrderItem> DeleteOrderItem
-            (int id, [Service] OrderItemRepository orderItemRepository)
+            (int orderItemId, [Service] OrderItemRepository orderItemRepository,ClaimsPrincipal claims)
         {
-            var orderItem = await orderItemRepository.getOrderItemByOrderItemId(id);
+            var isValidOrderItemId = await orderItemRepository.isThereOrderItemById(orderItemId);
+            if(!isValidOrderItemId)
+                throw new GraphQLException($"OrderItem with ID {orderItemId} not found.");
+            var orderItem = await orderItemRepository.getOrderItemByOrderItemId(orderItemId);
+            int userId = Convert.ToInt32(claims.Claims.FirstOrDefault(c => c.Type == "userId")?.Value);
+            if(orderItem.Order.userId != userId)
+                throw new GraphQLException("You can not delete this order item, it is not for you");
+            
+
+            return await orderItemRepository.deleteOrderItemByIdAsync(orderItemId);
+        }
+        [Authorize]
+        public async Task<OrderItem> ChangeOrderItemQuantity
+            (int orderItemId, int quantity, [Service] OrderItemRepository orderItemRepository,ClaimsPrincipal claims)
+        {
+            var orderItem = await orderItemRepository.getOrderItemByOrderItemId(orderItemId);
             if (orderItem == null)
             {
-                throw new GraphQLException($"OrderItem with ID {id} not found.");
+                throw new GraphQLException($"OrderItem with ID {orderItemId} not found.");
             }
-
-            return await orderItemRepository.deleteOrderItemByIdAsync(id);
-        }
-
-        public async Task<OrderItem> ChangeOrderItemQuantity(int id, int quantity, [Service] OrderItemRepository orderItemRepository)
-        {
-            var orderItem = await orderItemRepository.getOrderItemByOrderItemId(id);
-            if (orderItem == null)
+            int userId = Convert.ToInt32(claims.Claims.FirstOrDefault(c => c.Type == "userId")?.Value);
+            if (orderItem.Order.userId != userId)
             {
-                throw new GraphQLException($"OrderItem with ID {id} not found.");
+                throw new GraphQLException("You can not change this order item, it is not for you");
             }
-            if (quantity < 0) throw new GraphQLException("invalid quantity!");
+            if (quantity < 0 || quantity > orderItem.Product.StockQuantity) 
+                throw new GraphQLException("invalid quantity!");
 
-            return await orderItemRepository.changeQuantityByOrderItemId(id, quantity);
+            return await orderItemRepository.changeQuantityByOrderItemId(orderItemId, quantity);
         }
-
+        [Authorize(Roles = new[] { "Admin" })]
         public async Task<bool> isThereOrderItemWithId(int id, [Service] OrderItemRepository orderItemRepository)
         {
             if (await orderItemRepository.isThereOrderItemById(id)) return true;
