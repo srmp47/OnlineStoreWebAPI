@@ -32,7 +32,7 @@ namespace OnlineStoreWebAPI.Controllers
         public async Task<IActionResult> cancelMyOrder(int id)
         {
             var claimId = User.Claims.FirstOrDefault(u => u.Type == "userId");
-            int currentUserId = Convert.ToInt32(claimId);
+            int currentUserId = Convert.ToInt32(claimId.Value);
             var isValidId = await orderRepository.isThereOrderByIdAsync(id);
             if (!isValidId) return BadRequest("Order not exist");
             var order = await orderRepository.getOrderByOrderIdAsync(id);
@@ -51,7 +51,7 @@ namespace OnlineStoreWebAPI.Controllers
             if (!ModelState.IsValid) return BadRequest("Bad Request");
             Order order = mapper.Map<Order>(inputOrder);
             var claimId = User.Claims.FirstOrDefault(u => u.Type == "userId");
-            int currentUserId = Convert.ToInt32(claimId);
+            int currentUserId = Convert.ToInt32(claimId.Value);
             await orderRepository.setUserInOrder(order, currentUserId);
             if (inputOrder.orderItemDTOs != null && inputOrder.orderItemDTOs.Count != 0)
             {
@@ -65,6 +65,7 @@ namespace OnlineStoreWebAPI.Controllers
                     orderItem.Order = order;
                     await orderRepository.setOrderAndProductInOrderItem(orderItem);
                     order.orderItems.Add(orderItem);
+                    await productRepository.updateStockQuantityAsync(product.productId,orderItemDTO.quantity);
                 }
             }
 
@@ -105,7 +106,7 @@ namespace OnlineStoreWebAPI.Controllers
             ([FromQuery] PaginationParameters paginationParameters)
         {
             var claimId = User.Claims.FirstOrDefault(u => u.Type == "userId");
-            int currentUserId = Convert.ToInt32(claimId);
+            int currentUserId = Convert.ToInt32(claimId.Value);
             var orders = await orderRepository.getAllOrdersOfUserByIdAsync(currentUserId, paginationParameters);
             if (orders == null) return NotFound();
             return Ok(orders);
@@ -123,7 +124,7 @@ namespace OnlineStoreWebAPI.Controllers
         public async Task<IActionResult> deleteOrderById(int id)
         {
             var isValidId = await orderRepository.isThereOrderByIdAsync(id);
-            if (!isValidId) return NotFound("Product not exist");
+            if (!isValidId) return NotFound("Order not exist");
             var result = await orderRepository.deleteOrderByIdAsync(id);
             return Ok(result);
 
@@ -144,7 +145,7 @@ namespace OnlineStoreWebAPI.Controllers
         public async Task<IActionResult> getAllOrderItemsOfMyOrder(int orderId)
         {
             var claimId = User.Claims.FirstOrDefault(u => u.Type == "userId");
-            int currentUserId = Convert.ToInt32(claimId);
+            int currentUserId = Convert.ToInt32(claimId.Value);
             var isValidId = await orderRepository.isThereOrderByIdAsync(orderId);
             if (!isValidId) return BadRequest("Order not exist");
             var order = await orderRepository.getOrderByOrderIdAsync(orderId);

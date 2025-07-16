@@ -21,15 +21,18 @@ namespace OnlineStoreWebAPI.GraphQL
             if (input == null) throw new GraphQLException("input product is null!");
             var isValidOrderId = await orderRepository.isThereOrderByIdAsync(orderId);
             if(!isValidOrderId) throw new GraphQLException("Invalid order!");
-            var isValidProductId = await productRepository.
-                isThereProductWithIdAsync(input.productId);
-            if (!isValidProductId) throw new GraphQLException("Invalid product!");
+            var product = await productRepository.getProductByIdAsync(input.productId);
+            if(product == null)
+                throw new GraphQLException($"Product with ID {input.productId} not found.");
+            if (product.StockQuantity < input.quantity)
+                throw new GraphQLException("There is not enough stock for this product");
             int userId = Convert.ToInt32(claims.Claims.FirstOrDefault(c => c.Type == "userId")?.Value);
             var order = await  orderRepository.getOrderByOrderIdAsync(orderId);
             if(order.userId != userId)
             {
-                throw new GraphQLException("You can not add item to this orderthis order is not for you");
+                throw new GraphQLException("You can not add item to this order,this order is not for you");
             }
+
             var orderItem = mapper.Map<OrderItem>(input);
             orderItem.OrderId = orderId;
             await orderItemRepository.setOrderAndProductInOrderItem(orderItem);
@@ -65,7 +68,8 @@ namespace OnlineStoreWebAPI.GraphQL
         }
         [Authorize]
         public async Task<OrderItem> ChangeOrderItemQuantity
-            (int orderItemId, int quantity, [Service] OrderItemRepository orderItemRepository,ClaimsPrincipal claims)
+            (int orderItemId, int quantity, [Service] OrderItemRepository orderItemRepository,
+            ClaimsPrincipal claims)
         {
             var orderItem = await orderItemRepository.getOrderItemByOrderItemId(orderItemId);
             if (orderItem == null)

@@ -55,7 +55,9 @@ namespace OnlineStoreWebAPI.Repository
 
         public async Task<OrderItem?> getOrderItemByOrderItemId( int orderItemId)
         {
-            return await context.OrderItems.Where(oi => oi.OrderItemId == orderItemId)
+            // use Include to get Order from order item
+            return await context.OrderItems.Include(oi=>oi.Order).Include(oi=>oi.Product)
+                .Where(oi => oi.OrderItemId == orderItemId)
                 .FirstOrDefaultAsync();
         }
 

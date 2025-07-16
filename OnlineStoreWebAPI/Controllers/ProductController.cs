@@ -84,7 +84,7 @@ namespace OnlineStoreWebAPI.Controllers
                 return Ok(result);
             }
         }
-        [HttpGet]
+        [HttpGet("{id}/stockQuantity of product")]
         [Authorize]
         public async Task<IActionResult> getStockQuantityOfProduct(int id)
         {

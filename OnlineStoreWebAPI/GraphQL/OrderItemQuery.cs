@@ -10,9 +10,10 @@ namespace OnlineStoreWebAPI.GraphQL
     public class OrderItemQuery
     {
         [Authorize(Roles = new[] { "Admin" })]
-        public async Task<IEnumerable<OrderItem>> GetOrderItems([Service] OrderItemRepository orderItemRepository)
+        public async Task<IEnumerable<OrderItem>> GetOrderItems
+            ([Service] OrderItemRepository orderItemRepository,int pageId=1,int pageSize = 5)
         {
-            return await orderItemRepository.getAllOrderItemsAsync(new Pagination.PaginationParameters { PageId = 1, PageSize = 100 });
+            return await orderItemRepository.getAllOrderItemsAsync(new Pagination.PaginationParameters { PageId = pageId, PageSize = pageSize });
         }
 
         [Authorize(Roles = new[] { "Admin" })]

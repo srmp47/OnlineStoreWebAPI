@@ -66,6 +66,16 @@ namespace OnlineStoreWebAPI.Repository
             return await context.Products.AnyAsync(p => p.productId == id);
         }
 
+        public async Task<Product> updateStockQuantityAsync(int productId, int quantity)
+        {
+            var product = await  context.Products.FirstOrDefaultAsync(p => p.productId == productId);
+            var newStockQuantity = product.StockQuantity - quantity;
+            product.StockQuantity = newStockQuantity;
+            context.Update(product);
+            await context.SaveChangesAsync();
+            return product;
+        }
+
         public async Task<Product> updateProductAsync(int id,ProductUpdateDTO product)
         {
             var currentProduct = await context.Products.FirstOrDefaultAsync

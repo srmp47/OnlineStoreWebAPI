@@ -10,10 +10,11 @@ namespace OnlineStoreWebAPI.GraphQL
     public class ProductQuery
     {
         [AllowAnonymous]
-        public async Task<IEnumerable<Product>> GetProducts([Service] IProductRepository productRepository)
+        public async Task<IEnumerable<Product>> GetProducts([Service] IProductRepository productRepository,
+            int pageId = 1 , int pageSize = 5)
         {
             return await productRepository.getAllProductsAsync
-                (new Pagination.PaginationParameters { PageId = 1, PageSize = 100 },null);
+                (new Pagination.PaginationParameters { PageId = pageId, PageSize = pageSize },null);
         }
         [AllowAnonymous]
         public async Task<Product?> GetProductById(int id, [Service] IProductRepository productRepository)

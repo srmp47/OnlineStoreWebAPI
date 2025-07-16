@@ -10,9 +10,11 @@ namespace OnlineStoreWebAPI.GraphQL
     public class UserQuery
     {
         [Authorize(Roles = new[] { "Admin" })]
-        public async Task<IEnumerable<User>> GetUsers([Service] UserRepository userRepository)
+        public async Task<IEnumerable<User>> GetUsers([Service] UserRepository userRepository,
+            int pageId= 1,int pageSize=5)
         {
-            return await userRepository.getAllUsersAsync(new Pagination.PaginationParameters { PageId = 1, PageSize = 100 });
+            return await userRepository.getAllUsersAsync
+                (new Pagination.PaginationParameters { PageId = pageId, PageSize = pageSize });
         }
         [Authorize(Roles = new[] { "Admin" })]
 

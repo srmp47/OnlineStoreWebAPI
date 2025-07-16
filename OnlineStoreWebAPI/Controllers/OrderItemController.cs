@@ -46,14 +46,18 @@ namespace OnlineStoreWebAPI.Controllers
                 isThereProductWithIdAsync(orderItemDTO.productId);
             if (!isValidProductId) return BadRequest("Product not exist");
             var claimId = User.Claims.FirstOrDefault(u => u.Type == "userId");
-            int currentUserId = Convert.ToInt32(claimId);
+            int currentUserId = Convert.ToInt32(claimId.Value);
             var order = await orderRepository.getOrderByOrderIdAsync(orderId);
             if (order == null || order.userId != currentUserId)
                 return BadRequest("You can not add item to this order");
+            var  product = await productRepository.getProductByIdAsync(orderItemDTO.productId);
+            if (orderItemDTO.quantity>product.StockQuantity)
+                return BadRequest("There is not enough stock for this product");
             OrderItem orderItem = mapper.Map<OrderItem>(orderItemDTO);
             orderItem.OrderId = orderId;
             await orderItemRepository.setOrderAndProductInOrderItem(orderItem);
             if (!ModelState.IsValid) return BadRequest("Bad Request");
+            await productRepository.updateStockQuantityAsync(orderItem.productId, orderItem.quantity);
             var result = await orderItemRepository.createNewOrderItemAsync(orderItem);
             return Ok(result);
         }
@@ -63,7 +67,7 @@ namespace OnlineStoreWebAPI.Controllers
         public async Task<IActionResult> deleteOrderItemById(int id)
         {
             var claimId = User.Claims.FirstOrDefault(u => u.Type == "userId");
-            int currentUserId = Convert.ToInt32(claimId);
+            int currentUserId = Convert.ToInt32(claimId.Value);
             var orderItem = await orderItemRepository.getOrderItemByOrderItemId(id);
             if (orderItem == null || orderItem.Order.userId != currentUserId)  
                 return BadRequest("You can not delete this order item");
@@ -94,7 +98,7 @@ namespace OnlineStoreWebAPI.Controllers
         public async Task<IActionResult> changeQuantityByOrderItemId(int id,int quantity)
         {
             var claimId = User.Claims.FirstOrDefault(u => u.Type == "userId");
-            int currentUserId = Convert.ToInt32(claimId);
+            int currentUserId = Convert.ToInt32(claimId.Value);
             var orderItem = await orderItemRepository.getOrderItemByOrderItemId(id);
             if (orderItem == null || orderItem.Order.userId != currentUserId)
             {
