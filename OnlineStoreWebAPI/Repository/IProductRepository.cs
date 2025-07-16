@@ -13,7 +13,9 @@ namespace OnlineStoreWebAPI.Repository
         public Task<Product> createNewProductAsync(Product product);
         public Task<Product> deleteProductByIdAsync(int id);
         public Task<Product> updateProductAsync(int id,ProductUpdateDTO product);
-        public Task<Product> updateStockQuantityAsync(int productId, int quantity);
+        public  Task addToStockQuantity(int productId, int quantity);
+        public  Task removeFromStockQuantity(int productId, int quantity);
+        public Task setStockQuantity(int productId , int quantity);    
 
 
     }

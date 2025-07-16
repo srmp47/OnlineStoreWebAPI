@@ -39,8 +39,12 @@ namespace OnlineStoreWebAPI.Controllers
             if (order == null || order.userId != currentUserId)
                 return BadRequest("You can not cancel this order");
             if (order.status == OrderStatus.Shipped || order.status == OrderStatus.Delivered)
-                return BadRequest("You can not cancel this order");
+                return BadRequest("You can not cancel this order[shipped or delivered]");
             await orderRepository.cancelOrderByIdAsync(id);
+            foreach(var orderItem in order.orderItems)
+            {
+                await productRepository.addToStockQuantity(orderItem.productId, orderItem.quantity);
+            }
             return Ok("Your order has been cancelled successfully!");
         }
         [Authorize]
@@ -65,7 +69,7 @@ namespace OnlineStoreWebAPI.Controllers
                     orderItem.Order = order;
                     await orderRepository.setOrderAndProductInOrderItem(orderItem);
                     order.orderItems.Add(orderItem);
-                    await productRepository.updateStockQuantityAsync(product.productId,orderItemDTO.quantity);
+                    await productRepository.removeFromStockQuantity(orderItemDTO.productId, orderItemDTO.quantity);
                 }
             }
 
@@ -121,6 +125,9 @@ namespace OnlineStoreWebAPI.Controllers
         }
         [HttpDelete("{id}")]
         [Authorize("Admin")]
+        // in this method I do not remove the quantity of order items from the stock qunatity of product
+        // because I assume that admin deletes the orders just when order is cancelled
+        // and in that case the stock quantity of products is already added back to the stock quantity
         public async Task<IActionResult> deleteOrderById(int id)
         {
             var isValidId = await orderRepository.isThereOrderByIdAsync(id);
@@ -155,6 +162,7 @@ namespace OnlineStoreWebAPI.Controllers
         }
         [HttpPatch("{id}/changeStatus/{status}")]
         [Authorize(Roles = "Admin")]
+        // in this method I do not remove the quantity of order items from the stock qunatity of product
         public async Task<IActionResult> changeOrderStatusByOrderId(int id, OrderStatus status)
         {
             var isValidId = await orderRepository.isThereOrderByIdAsync(id);

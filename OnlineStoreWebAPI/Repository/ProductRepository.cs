@@ -66,14 +66,26 @@ namespace OnlineStoreWebAPI.Repository
             return await context.Products.AnyAsync(p => p.productId == id);
         }
 
-        public async Task<Product> updateStockQuantityAsync(int productId, int quantity)
+       
+        public async Task addToStockQuantity(int productId, int quantity)
         {
-            var product = await  context.Products.FirstOrDefaultAsync(p => p.productId == productId);
-            var newStockQuantity = product.StockQuantity - quantity;
-            product.StockQuantity = newStockQuantity;
-            context.Update(product);
-            await context.SaveChangesAsync();
-            return product;
+            var product = await context.Products.FirstOrDefaultAsync(p => p.productId == productId);
+            if (product != null)
+            {
+                product.StockQuantity += quantity;
+                context.Update(product);
+                await context.SaveChangesAsync();
+            }
+        }
+        public async Task  removeFromStockQuantity(int productId, int quantity)
+        {
+            var product = await context.Products.FirstOrDefaultAsync(p => p.productId == productId);
+            if (product != null)
+            {
+                product.StockQuantity -= quantity;
+                context.Update(product);
+                await context.SaveChangesAsync();
+            }
         }
 
         public async Task<Product> updateProductAsync(int id,ProductUpdateDTO product)
@@ -87,6 +99,17 @@ namespace OnlineStoreWebAPI.Repository
             context.Update(currentProduct);
             await context.SaveChangesAsync();
             return currentProduct;
+        }
+
+        public async Task setStockQuantity(int productId, int quantity)
+        {
+            var product = await  context.Products.FirstOrDefaultAsync(p => p.productId == productId);
+            if (product != null)
+            {
+                product.StockQuantity = quantity;
+                context.Update(product);
+                await context.SaveChangesAsync();
+            }
         }
     }
 }

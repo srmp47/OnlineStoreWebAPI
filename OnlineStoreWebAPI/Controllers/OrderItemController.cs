@@ -57,7 +57,7 @@ namespace OnlineStoreWebAPI.Controllers
             orderItem.OrderId = orderId;
             await orderItemRepository.setOrderAndProductInOrderItem(orderItem);
             if (!ModelState.IsValid) return BadRequest("Bad Request");
-            await productRepository.updateStockQuantityAsync(orderItem.productId, orderItem.quantity);
+            await productRepository.removeFromStockQuantity(orderItemDTO.productId, orderItemDTO.quantity);
             var result = await orderItemRepository.createNewOrderItemAsync(orderItem);
             return Ok(result);
         }
@@ -71,7 +71,7 @@ namespace OnlineStoreWebAPI.Controllers
             var orderItem = await orderItemRepository.getOrderItemByOrderItemId(id);
             if (orderItem == null || orderItem.Order.userId != currentUserId)  
                 return BadRequest("You can not delete this order item");
-
+            await productRepository.addToStockQuantity(orderItem.productId, orderItem.quantity);
             var result = await orderItemRepository.deleteOrderItemByIdAsync(id);
             return Ok(result);
 
@@ -106,6 +106,7 @@ namespace OnlineStoreWebAPI.Controllers
             }
             if (quantity < 0 || quantity > orderItem.Product.StockQuantity)
                 return BadRequest("there is not this number of products");
+            await productRepository.setStockQuantity(orderItem.productId, quantity);
             var result = await orderItemRepository.changeQuantityByOrderItemId(id, quantity);
             return Ok(orderItem);
 

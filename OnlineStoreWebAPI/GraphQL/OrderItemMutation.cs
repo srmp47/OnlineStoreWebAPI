@@ -32,10 +32,10 @@ namespace OnlineStoreWebAPI.GraphQL
             {
                 throw new GraphQLException("You can not add item to this order,this order is not for you");
             }
-
             var orderItem = mapper.Map<OrderItem>(input);
             orderItem.OrderId = orderId;
             await orderItemRepository.setOrderAndProductInOrderItem(orderItem);
+            await productRepository.removeFromStockQuantity(orderItem.productId,orderItem.quantity);
             return await orderItemRepository.createNewOrderItemAsync(orderItem);
         }
 
@@ -53,7 +53,8 @@ namespace OnlineStoreWebAPI.GraphQL
         //}
         [Authorize]
         public async Task<OrderItem> DeleteOrderItem
-            (int orderItemId, [Service] OrderItemRepository orderItemRepository,ClaimsPrincipal claims)
+            (int orderItemId, [Service] OrderItemRepository orderItemRepository,
+            ClaimsPrincipal claims, [Service]ProductRepository productRepository)
         {
             var isValidOrderItemId = await orderItemRepository.isThereOrderItemById(orderItemId);
             if(!isValidOrderItemId)
@@ -63,13 +64,13 @@ namespace OnlineStoreWebAPI.GraphQL
             if(orderItem.Order.userId != userId)
                 throw new GraphQLException("You can not delete this order item, it is not for you");
             
-
+            await productRepository.addToStockQuantity(orderItem.productId, orderItem.quantity);
             return await orderItemRepository.deleteOrderItemByIdAsync(orderItemId);
         }
         [Authorize]
         public async Task<OrderItem> ChangeOrderItemQuantity
             (int orderItemId, int quantity, [Service] OrderItemRepository orderItemRepository,
-            ClaimsPrincipal claims)
+            ClaimsPrincipal claims, [Service]ProductRepository productRepository)
         {
             var orderItem = await orderItemRepository.getOrderItemByOrderItemId(orderItemId);
             if (orderItem == null)
@@ -83,8 +84,10 @@ namespace OnlineStoreWebAPI.GraphQL
             }
             if (quantity < 0 || quantity > orderItem.Product.StockQuantity) 
                 throw new GraphQLException("invalid quantity!");
-
-            return await orderItemRepository.changeQuantityByOrderItemId(orderItemId, quantity);
+            var product = await productRepository.getProductByIdAsync(orderItem.productId);
+            await productRepository.setStockQuantity(orderItem.productId, quantity);
+            return await orderItemRepository.changeQuantityByOrderItemId
+                (orderItemId, product.StockQuantity-quantity);
         }
         [Authorize(Roles = new[] { "Admin" })]
         public async Task<bool> isThereOrderItemWithId(int id, [Service] OrderItemRepository orderItemRepository)
