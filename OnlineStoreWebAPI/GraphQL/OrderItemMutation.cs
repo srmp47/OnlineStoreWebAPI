@@ -32,6 +32,7 @@ namespace OnlineStoreWebAPI.GraphQL
             {
                 throw new GraphQLException("You can not add item to this order,this order is not for you");
             }
+            if(input.quantity == 0) throw new GraphQLException("You can not add order item with zero quantity");
             var orderItem = mapper.Map<OrderItem>(input);
             orderItem.OrderId = orderId;
             await orderItemRepository.setOrderAndProductInOrderItem(orderItem);
@@ -82,12 +83,15 @@ namespace OnlineStoreWebAPI.GraphQL
             {
                 throw new GraphQLException("You can not change this order item, it is not for you");
             }
-            if (quantity < 0 || quantity > orderItem.Product.StockQuantity) 
+            if(orderItem.Order.status == OrderStatus.Cancelled)
+            {
+                throw new GraphQLException("You can not change this order item, this order is cancelled");
+            }
+            if (quantity < 0 || quantity > orderItem.Product.StockQuantity + orderItem.quantity ) 
                 throw new GraphQLException("invalid quantity!");
-            var product = await productRepository.getProductByIdAsync(orderItem.productId);
-            await productRepository.setStockQuantity(orderItem.productId, quantity);
+            await productRepository.setStockQuantity(orderItem.productId, orderItem.Product.StockQuantity + orderItem.quantity - quantity);
             return await orderItemRepository.changeQuantityByOrderItemId
-                (orderItemId, product.StockQuantity-quantity);
+                (orderItemId, quantity);
         }
         [Authorize(Roles = new[] { "Admin" })]
         public async Task<bool> isThereOrderItemWithId(int id, [Service] OrderItemRepository orderItemRepository)

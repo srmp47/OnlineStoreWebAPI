@@ -97,7 +97,7 @@ app.UseHttpsRedirection();
 
 app.UseAuthentication();
 
-
+app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseAuthorization();
 
 app.MapControllers();

@@ -15,11 +15,12 @@ namespace OnlineStoreWebAPI.Repository
             this.context = inputContext;
             this.mapper = inputMapper;
         }
-
         public async  Task cancelOrderByIdAsync(int id)
         {
             var order = await context.Orders.FirstOrDefaultAsync(o => o.OrderId == id);
-            order.status = OrderStatus.Cancelled; 
+            
+            order.status = OrderStatus.Cancelled;
+            context.Update(order);
             await context.SaveChangesAsync();
         }
 
@@ -62,7 +63,7 @@ namespace OnlineStoreWebAPI.Repository
 
         public async Task<Order?> getOrderByOrderIdAsync(int orderId)
         {
-            return await context.Orders.Where(o =>  o.OrderId == orderId)
+            return await context.Orders.Where(o =>  o.OrderId == orderId).Include(o=>o.orderItems)
                 .FirstOrDefaultAsync();
         }
 

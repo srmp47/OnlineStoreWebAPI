@@ -82,14 +82,21 @@ namespace OnlineStoreWebAPI.GraphQL
             var order = await orderRepository.getOrderByOrderIdAsync(orderId);
             if (order == null)
             {
-                throw new GraphQLException($"Order with ID {userId} not found.");
+                throw new GraphQLException($"Order with ID {orderId} not found.");
             }
             if(order.userId != userId)
                 throw new GraphQLException("You can not cancel this order, because you are not owner of this order!");
-            foreach(var orderItem in order.orderItems)
+            if (order.status == OrderStatus.Shipped || order.status == OrderStatus.Delivered)
+                throw new GraphQLException("You can not cancel this order[shipped or delivered]");
+            if (order.status == OrderStatus.Cancelled)
+            {
+                throw new GraphQLException("This order is already cancelled.");
+            }
+            foreach (var orderItem in order.orderItems)
             {
                 await productRepository.addToStockQuantity(orderItem.productId, orderItem.quantity);
             }
+           
             await orderRepository.cancelOrderByIdAsync(orderId);
             var result = await orderRepository.getOrderByOrderIdAsync(orderId);
             return result;

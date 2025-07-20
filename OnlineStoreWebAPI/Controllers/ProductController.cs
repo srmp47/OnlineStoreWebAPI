@@ -10,7 +10,10 @@ namespace OnlineStoreWebAPI.Controllers
 {
     [Route("api/Product")]
     [ApiController]
-
+    //TODO when user adds a product to  his/her order items , quantity of products should not be chnaged
+    // quantity is changed when the order is completed...
+    // TODO when an order is completed , the price of it's prodcts should not be changed
+    // user should see the price that is paid befor. not currect price
     public class ProductController : ControllerBase
     {
         private readonly IMapper mapper;

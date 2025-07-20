@@ -23,6 +23,7 @@ namespace OnlineStoreWebAPI.Repository
         {
             var orderItem = await context.OrderItems.FirstOrDefaultAsync(oi => oi.OrderItemId == id);
             orderItem.quantity = quantity;
+            context.Update(orderItem);
             await context.SaveChangesAsync();
             return orderItem;
         }

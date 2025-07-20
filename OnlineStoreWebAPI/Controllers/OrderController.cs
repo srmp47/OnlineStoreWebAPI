@@ -40,6 +40,10 @@ namespace OnlineStoreWebAPI.Controllers
                 return BadRequest("You can not cancel this order");
             if (order.status == OrderStatus.Shipped || order.status == OrderStatus.Delivered)
                 return BadRequest("You can not cancel this order[shipped or delivered]");
+            if (order.status == OrderStatus.Cancelled)
+            {
+                throw new GraphQLException("This order is already cancelled.");
+            }
             await orderRepository.cancelOrderByIdAsync(id);
             foreach(var orderItem in order.orderItems)
             {
@@ -57,6 +61,7 @@ namespace OnlineStoreWebAPI.Controllers
             var claimId = User.Claims.FirstOrDefault(u => u.Type == "userId");
             int currentUserId = Convert.ToInt32(claimId.Value);
             await orderRepository.setUserInOrder(order, currentUserId);
+            // TODO this section should be atomic!
             if (inputOrder.orderItemDTOs != null && inputOrder.orderItemDTOs.Count != 0)
             {
                 foreach (var orderItemDTO in inputOrder.orderItemDTOs)
@@ -160,6 +165,7 @@ namespace OnlineStoreWebAPI.Controllers
             var result = await orderRepository.getAllOrderItemsByOrderIdAsync(orderId);
             return Ok(result);
         }
+        
         [HttpPatch("{id}/changeStatus/{status}")]
         [Authorize(Roles = "Admin")]
         // in this method I do not remove the quantity of order items from the stock qunatity of product

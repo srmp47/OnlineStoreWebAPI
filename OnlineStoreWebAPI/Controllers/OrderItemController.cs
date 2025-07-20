@@ -51,8 +51,10 @@ namespace OnlineStoreWebAPI.Controllers
             if (order == null || order.userId != currentUserId)
                 return BadRequest("You can not add item to this order");
             var  product = await productRepository.getProductByIdAsync(orderItemDTO.productId);
-            if (orderItemDTO.quantity>product.StockQuantity)
+            if (orderItemDTO.quantity > product.StockQuantity )
                 return BadRequest("There is not enough stock for this product");
+            if(orderItemDTO.quantity == 0)
+                return BadRequest("You can not add order item with zero quantity");
             OrderItem orderItem = mapper.Map<OrderItem>(orderItemDTO);
             orderItem.OrderId = orderId;
             await orderItemRepository.setOrderAndProductInOrderItem(orderItem);
@@ -104,9 +106,11 @@ namespace OnlineStoreWebAPI.Controllers
             {
                 return BadRequest("you don't have this order item");
             }
-            if (quantity < 0 || quantity > orderItem.Product.StockQuantity)
+            if (orderItem.Order.status == OrderStatus.Cancelled)
+                return Conflict("You can not change this order item, this order is cancelled");
+            if (quantity < 0 || quantity > orderItem.Product.StockQuantity + orderItem.quantity)
                 return BadRequest("there is not this number of products");
-            await productRepository.setStockQuantity(orderItem.productId, quantity);
+            await productRepository.setStockQuantity(orderItem.productId, orderItem.Product.StockQuantity + orderItem.quantity - quantity);
             var result = await orderItemRepository.changeQuantityByOrderItemId(id, quantity);
             return Ok(orderItem);
 
