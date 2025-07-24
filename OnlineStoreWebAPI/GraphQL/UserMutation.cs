@@ -65,7 +65,7 @@ namespace OnlineStoreWebAPI.GraphQL
             
             return deletedUser;
         }
-        //TODO implement signup
+        
         [Authorize(Roles = new[] { "Admin" })]
         public async Task<User> CreateUser(UserWithoutIsActiveDTO inputUser, [Service] UserRepository userRepository, [Service] AutoMapper.IMapper mapper)
         {
@@ -83,5 +83,12 @@ namespace OnlineStoreWebAPI.GraphQL
             
             return await userRepository.updateUserAsync(userId, inputUser);
         }
+        public async Task<User> signUp(UserWithoutIsActiveDTO inputUser, [Service] UserRepository userRepository, [Service] AutoMapper.IMapper mapper)
+        {
+            if (inputUser == null) throw new GraphQLException("input is null");
+            var user = mapper.Map<User>(inputUser);
+            return await userRepository.createNewUserAsync(user);
+        }
+
     }
 } 

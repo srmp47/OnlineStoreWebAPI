@@ -18,25 +18,28 @@ namespace OnlineStoreWebAPI.GraphQL
             [Service] AutoMapper.IMapper mapper, [Service]OrderRepository orderRepository,
             [Service]ProductRepository productRepository,ClaimsPrincipal claims)
         {
-            if (input == null) throw new GraphQLException("input product is null!");
+            if (input == null) throw new GraphQLException("input is null!");
             var isValidOrderId = await orderRepository.isThereOrderByIdAsync(orderId);
             if(!isValidOrderId) throw new GraphQLException("Invalid order!");
             var product = await productRepository.getProductByIdAsync(input.productId);
             if(product == null)
                 throw new GraphQLException($"Product with ID {input.productId} not found.");
+            var order = await orderRepository.getOrderByOrderIdAsync(orderId);
+            if (order.status == OrderStatus.Cancelled)
+                throw new GraphQLException("You can not add item to this order, this order is cancelled");
+            if(order.status != OrderStatus.Cancelled || order.status != OrderStatus.Pending)
+                throw new GraphQLException("The order is being prepared for shipment. you can not add new product. please place a new order");
             if (product.StockQuantity < input.quantity)
                 throw new GraphQLException("There is not enough stock for this product");
             int userId = Convert.ToInt32(claims.Claims.FirstOrDefault(c => c.Type == "userId")?.Value);
-            var order = await  orderRepository.getOrderByOrderIdAsync(orderId);
             if(order.userId != userId)
             {
                 throw new GraphQLException("You can not add item to this order,this order is not for you");
             }
-            if(input.quantity == 0) throw new GraphQLException("You can not add order item with zero quantity");
+            if(input.quantity <= 0) throw new GraphQLException("You can not add order item with zero or negative quantity");
             var orderItem = mapper.Map<OrderItem>(input);
             orderItem.OrderId = orderId;
             await orderItemRepository.setOrderAndProductInOrderItem(orderItem);
-            await productRepository.removeFromStockQuantity(orderItem.productId,orderItem.quantity);
             return await orderItemRepository.createNewOrderItemAsync(orderItem);
         }
 
@@ -62,10 +65,18 @@ namespace OnlineStoreWebAPI.GraphQL
                 throw new GraphQLException($"OrderItem with ID {orderItemId} not found.");
             var orderItem = await orderItemRepository.getOrderItemByOrderItemId(orderItemId);
             int userId = Convert.ToInt32(claims.Claims.FirstOrDefault(c => c.Type == "userId")?.Value);
-            if(orderItem.Order.userId != userId)
+            //TODO can you get the user id of order item with better performance?(e.g. without loading the orderItem)
+            if (orderItem.Order.userId != userId)
                 throw new GraphQLException("You can not delete this order item, it is not for you");
-            
-            await productRepository.addToStockQuantity(orderItem.productId, orderItem.quantity);
+            if(orderItem.Order.status == OrderStatus.Cancelled)
+            {
+                throw new GraphQLException("You can not delete this order item, this order is cancelled");
+            }
+            if(orderItem.Order.status != OrderStatus.Cancelled && orderItem.Order.status != OrderStatus.Pending)
+            {
+                throw new GraphQLException("The order is being prepared for shipment. you can not delete this product.");
+            }
+
             return await orderItemRepository.deleteOrderItemByIdAsync(orderItemId);
         }
         [Authorize]
@@ -89,7 +100,10 @@ namespace OnlineStoreWebAPI.GraphQL
             }
             if (quantity < 0 || quantity > orderItem.Product.StockQuantity + orderItem.quantity ) 
                 throw new GraphQLException("invalid quantity!");
-            await productRepository.setStockQuantity(orderItem.productId, orderItem.Product.StockQuantity + orderItem.quantity - quantity);
+            if(orderItem.Order.status != OrderStatus.Cancelled && orderItem.Order.status != OrderStatus.Pending)
+            {
+                throw new GraphQLException("The order is being prepared for shipment. you can not change this product.");
+            }
             return await orderItemRepository.changeQuantityByOrderItemId
                 (orderItemId, quantity);
         }

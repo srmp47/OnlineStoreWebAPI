@@ -23,6 +23,8 @@ namespace OnlineStoreWebAPI.Mapping
             CreateMap<ProductDTO, Product>();
             CreateMap<OrderDTO, Order>();
             CreateMap<OrderItemDTO, OrderItem>();
+            CreateMap<UserUpdateDTO, User>();
+            CreateMap<User, UserUpdateDTO>();
             
             
         }

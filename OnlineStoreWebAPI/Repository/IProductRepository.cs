@@ -15,7 +15,9 @@ namespace OnlineStoreWebAPI.Repository
         public Task<Product> updateProductAsync(int id,ProductUpdateDTO product);
         public  Task addToStockQuantity(int productId, int quantity);
         public  Task removeFromStockQuantity(int productId, int quantity);
-        public Task setStockQuantity(int productId , int quantity);    
+        public Task setStockQuantity(int productId , int quantity);
+        public Task partialUpdateProduct(Product product);
+        public Task<int> getQuantityOfProduct(int productId);
 
 
     }

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using OnlineStoreWebAPI.DTO;
 using OnlineStoreWebAPI.Model;
@@ -95,6 +96,29 @@ namespace OnlineStoreWebAPI.Controllers
             if (product == null) return NotFound("Product not found");
             return Ok(product.StockQuantity);
 
+        }
+        [Authorize(Roles = "Admin")]
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> PatchProductById(int id, [FromBody] JsonPatchDocument<ProductUpdateDTO> patchDoc)
+        {
+            if (patchDoc == null)
+                return BadRequest("Patch document is null");
+
+            var product = await productRepository.getProductByIdAsync(id);
+            if (product == null)
+                return NotFound("Product not found");
+
+            var productToPatch = mapper.Map<ProductUpdateDTO>(product);
+
+            patchDoc.ApplyTo(productToPatch);
+
+            if (!TryValidateModel(productToPatch))
+                return BadRequest(ModelState);
+
+            mapper.Map(productToPatch, product);
+            await productRepository.partialUpdateProduct(product);
+
+            return NoContent();
         }
     }
 }

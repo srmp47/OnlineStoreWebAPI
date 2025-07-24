@@ -27,56 +27,36 @@ namespace OnlineStoreWebAPI.Controllers
             this.userRepository = userRepository;
             this.userRepository = userRepository;
         }
-        [HttpPatch("{id}/cancel")]
-        [Authorize]
-        public async Task<IActionResult> cancelMyOrder(int id)
-        {
-            var claimId = User.Claims.FirstOrDefault(u => u.Type == "userId");
-            int currentUserId = Convert.ToInt32(claimId.Value);
-            var isValidId = await orderRepository.isThereOrderByIdAsync(id);
-            if (!isValidId) return BadRequest("Order not exist");
-            var order = await orderRepository.getOrderByOrderIdAsync(id);
-            if (order == null || order.userId != currentUserId)
-                return BadRequest("You can not cancel this order");
-            if (order.status == OrderStatus.Shipped || order.status == OrderStatus.Delivered)
-                return BadRequest("You can not cancel this order[shipped or delivered]");
-            if (order.status == OrderStatus.Cancelled)
-            {
-                throw new GraphQLException("This order is already cancelled.");
-            }
-            await orderRepository.cancelOrderByIdAsync(id);
-            foreach(var orderItem in order.orderItems)
-            {
-                await productRepository.addToStockQuantity(orderItem.productId, orderItem.quantity);
-            }
-            return Ok("Your order has been cancelled successfully!");
-        }
+        
         [Authorize]
         [HttpPost("AddOrder")]
         public async Task<IActionResult> createNewOrder(OrderDTO inputOrder)
         {
             if (inputOrder == null) return BadRequest("input Order is null!");
             if (!ModelState.IsValid) return BadRequest("Bad Request");
+            if( inputOrder.orderItemDTOs == null || inputOrder.orderItemDTOs.Count == 0)
+                return BadRequest("you must have at least one order item in your order");
             Order order = mapper.Map<Order>(inputOrder);
             var claimId = User.Claims.FirstOrDefault(u => u.Type == "userId");
             int currentUserId = Convert.ToInt32(claimId.Value);
             await orderRepository.setUserInOrder(order, currentUserId);
-            // TODO this section should be atomic!
-            if (inputOrder.orderItemDTOs != null && inputOrder.orderItemDTOs.Count != 0)
+            foreach (var orderItemDTO in inputOrder.orderItemDTOs)
             {
-                foreach (var orderItemDTO in inputOrder.orderItemDTOs)
-                {
-                    var product = await productRepository.getProductByIdAsync(orderItemDTO.productId);
-                    if (product == null) return BadRequest("Product not exist");
-                    if (product.StockQuantity < orderItemDTO.quantity)
-                        return BadRequest("There is not enough stock for this product");
-                    var orderItem = mapper.Map<OrderItem>(orderItemDTO);
-                    orderItem.Order = order;
-                    await orderRepository.setOrderAndProductInOrderItem(orderItem);
-                    order.orderItems.Add(orderItem);
-                    await productRepository.removeFromStockQuantity(orderItemDTO.productId, orderItemDTO.quantity);
-                }
+            var product = await productRepository.getProductByIdAsync(orderItemDTO.productId);
+            if (product == null) return BadRequest($"Product with id {orderItemDTO.productId} not exist");
+            if (product.StockQuantity < orderItemDTO.quantity)
+            return BadRequest($"There is not enough stock for product with id {product.productId}");
+            if(orderItemDTO.quantity <= 0)
+                    return BadRequest("You can not add order item with zero or negative quantity");
             }
+            foreach (var orderItemDTO in inputOrder.orderItemDTOs)
+            {
+            var orderItem = mapper.Map<OrderItem>(orderItemDTO);
+            orderItem.Order = order;
+            await orderRepository.setOrderAndProductInOrderItem(orderItem);
+            order.orderItems.Add(orderItem);
+            }
+            
 
             var result = await orderRepository.createNewOrderAsync(order);
             return Ok(result);
@@ -144,7 +124,6 @@ namespace OnlineStoreWebAPI.Controllers
 
         [HttpGet("OrderItemsOfOrder/{orderId}")]
         [Authorize("Admin")]
-        //TODO user can only see his/her order items.
         public async Task<IActionResult> getAllOrderItemsByOrderId(int orderId)
         {
             var isValidId = await orderRepository.isThereOrderByIdAsync(orderId);
@@ -176,9 +155,55 @@ namespace OnlineStoreWebAPI.Controllers
             var result = await orderRepository.changeOrderStatusByOrderIdAsync(id, status);
             return Ok(result);
         }
-        
+
+        [HttpPatch("{id}/changeStatusOfMyOrder/{status}")]
+        [Authorize]
+        public async Task<IActionResult> changeMyOrderStatusByOrderId(int id, OrderStatus status)
+        {
+            var claimId = User.Claims.FirstOrDefault(u => u.Type == "userId");
+            int currentUserId = Convert.ToInt32(claimId.Value);
+            var isValidId = await orderRepository.isThereOrderByIdAsync(id);
+            if (!isValidId) return BadRequest("Order not exist");
+            var order = await orderRepository.getOrderByOrderIdAsync(id);
+            if (order == null || order.userId != currentUserId)
+                return BadRequest("You can not change the status of this order");
+            if ( order.status == OrderStatus.Cancelled)
+            {
+                return BadRequest("This order is already cancelled.");
+            }
+            if (status == OrderStatus.Cancelled && order.status != OrderStatus.Pending)
+            {
+                return BadRequest("You can not cancel this order, it is not pending.");
+            }
+            if(status == OrderStatus.Cancelled && order.status == OrderStatus.Pending)
+            {
+                var result = await orderRepository.changeOrderStatusByOrderIdAsync(id, status);
+                return Ok("The order is cancelled successfully.");
+            }
+            if (status == OrderStatus.Processing && order.status == OrderStatus.Pending)
+            {
+                foreach (var orderItem in order.orderItems)
+                {
+                    var productQuantity = await productRepository.getQuantityOfProduct(orderItem.productId);
+                    if (orderItem.quantity > productQuantity)
+                        return BadRequest
+                            ($"We only have {productQuantity} units of “{orderItem.productId}” in stock, " +
+                            $"but you requested {orderItem.quantity}. Please reduce the quantity");
+                }
+                foreach (var orderItem in order.orderItems)
+                {
+                    await productRepository.removeFromStockQuantity(orderItem.productId, orderItem.quantity);
+                }
+                var result = await orderRepository.changeOrderStatusByOrderIdAsync(id, status);
+                return Ok("The order is processing successfully.");
+            }
+            else return BadRequest("You can not change the status of this order to this status");
+            
+        }
 
 
 
-     }
+
+
+        }
 }

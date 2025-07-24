@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -67,7 +68,6 @@ namespace OnlineStoreWebAPI.Controllers
             return Ok(result);
 
         }
-        // implement sign up
         [HttpPost("AddUser")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> createNewUser([FromBody] UserWithoutIsActiveDTO inputUser)
@@ -90,8 +90,6 @@ namespace OnlineStoreWebAPI.Controllers
             if (success) return Ok("User De Activated Successfully");
             else return NotFound("User Not Found!");
         }
-        // TODO implement that user can only see his/her information . not for other users.
-        // for this , you should undrestand that which user is logged in and send request.
         [Authorize(Roles = "Admin")]
         [HttpGet("{id}/isActive")]
         public async Task<IActionResult> isActiveUserById(int id)
@@ -112,7 +110,6 @@ namespace OnlineStoreWebAPI.Controllers
         }
         [Authorize(Roles = "Admin")]
         [HttpPut("{id}/Update")]
-        // just admin can update other  users information.
         public async Task<IActionResult> updateUserById(int id, [FromBody] UserUpdateDTO user)
         {
 
@@ -127,8 +124,33 @@ namespace OnlineStoreWebAPI.Controllers
                 return Ok(result);
             }
         }
+        //TODO could not test this method
         [Authorize]
-        [HttpPost("Update")]
+        [HttpPatch]
+        public async Task<IActionResult> PatchUser( [FromBody] JsonPatchDocument<UserUpdateDTO> patchDoc)
+        {
+            if (patchDoc == null)
+                return BadRequest("Patch document is null");
+            var claimId = User.Claims.FirstOrDefault(u => u.Type == "userId");
+            int id = Convert.ToInt32(claimId.Value);
+            var user = await userRepository.getUserByIdAsync(id);
+
+            var userToPatch = mapper.Map<UserUpdateDTO>(user);
+
+            patchDoc.ApplyTo(userToPatch); 
+
+            if (!TryValidateModel(userToPatch))
+                return BadRequest(ModelState);
+
+            mapper.Map(userToPatch, user);
+            await userRepository.partialUpdateUser(user);
+
+            return NoContent();
+        }
+
+
+        [Authorize]
+        [HttpPut("Update")]
         public async Task<IActionResult> updateUser([FromBody] UserUpdateDTO user)
         {
             if (user == null) return BadRequest("User is null");
@@ -148,7 +170,6 @@ namespace OnlineStoreWebAPI.Controllers
         [Authorize]
 
         [HttpGet("show my information")]
-        // TODO make it async
         public async Task<IActionResult> getMyInformation()
         {
             var claimId = User.Claims.FirstOrDefault(u => u.Type == "userId");

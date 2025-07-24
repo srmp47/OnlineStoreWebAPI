@@ -24,8 +24,8 @@ public class ErrorHandlingMiddleware
             await HandleExceptionAsync(context, ex);
         }
     }
-
     private static Task HandleExceptionAsync(HttpContext context, Exception exception)
+
     {
         var code = HttpStatusCode.InternalServerError; 
         var result = System.Text.Json.JsonSerializer.Serialize(new { error = exception.Message });

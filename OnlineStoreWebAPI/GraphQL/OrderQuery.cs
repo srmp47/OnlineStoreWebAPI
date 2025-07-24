@@ -10,6 +10,7 @@ namespace OnlineStoreWebAPI.GraphQL
     [ExtendObjectType(typeof(UserQuery))]
     public class OrderQuery
     {
+        // TODO we should return IQueryable in graphql outputs....
         [Authorize(Roles = new[] { "Admin" })]
         public async Task<IEnumerable<Order>> GetOrders
             ([Service] OrderRepository orderRepository,int pageId = 1, int pageSize = 5)

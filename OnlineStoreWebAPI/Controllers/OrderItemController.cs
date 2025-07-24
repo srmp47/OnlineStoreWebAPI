@@ -34,6 +34,7 @@ namespace OnlineStoreWebAPI.Controllers
             return Ok(result);
 
         }
+        // TODO user should can add a few order items
         [Authorize]
         [HttpPost("AddOrderItem/{orderId}")]
         public async Task<IActionResult> createNewOrderItem(int orderId , OrderItemDTO orderItemDTO)
@@ -50,16 +51,19 @@ namespace OnlineStoreWebAPI.Controllers
             var order = await orderRepository.getOrderByOrderIdAsync(orderId);
             if (order == null || order.userId != currentUserId)
                 return BadRequest("You can not add item to this order");
-            var  product = await productRepository.getProductByIdAsync(orderItemDTO.productId);
-            if (orderItemDTO.quantity > product.StockQuantity )
+            var  quantity = await productRepository.getQuantityOfProduct(orderItemDTO.productId);
+            if (order.status == OrderStatus.Pending && orderItemDTO.quantity > quantity )
                 return BadRequest("There is not enough stock for this product");
-            if(orderItemDTO.quantity == 0)
-                return BadRequest("You can not add order item with zero quantity");
+            if(order.status == OrderStatus.Cancelled)
+                return BadRequest("You can not add item to this order, this order is cancelled");
+            if (order.status != OrderStatus.Cancelled && order.status != OrderStatus.Pending)
+                return BadRequest("The order is being prepared for shipment. you can not add new product. please place a new order");
+            if (orderItemDTO.quantity <= 0)
+                return BadRequest("You can not add order item with zero or negative quantity");
             OrderItem orderItem = mapper.Map<OrderItem>(orderItemDTO);
             orderItem.OrderId = orderId;
             await orderItemRepository.setOrderAndProductInOrderItem(orderItem);
             if (!ModelState.IsValid) return BadRequest("Bad Request");
-            await productRepository.removeFromStockQuantity(orderItemDTO.productId, orderItemDTO.quantity);
             var result = await orderItemRepository.createNewOrderItemAsync(orderItem);
             return Ok(result);
         }
@@ -73,7 +77,6 @@ namespace OnlineStoreWebAPI.Controllers
             var orderItem = await orderItemRepository.getOrderItemByOrderItemId(id);
             if (orderItem == null || orderItem.Order.userId != currentUserId)  
                 return BadRequest("You can not delete this order item");
-            await productRepository.addToStockQuantity(orderItem.productId, orderItem.quantity);
             var result = await orderItemRepository.deleteOrderItemByIdAsync(id);
             return Ok(result);
 
@@ -110,7 +113,6 @@ namespace OnlineStoreWebAPI.Controllers
                 return Conflict("You can not change this order item, this order is cancelled");
             if (quantity < 0 || quantity > orderItem.Product.StockQuantity + orderItem.quantity)
                 return BadRequest("there is not this number of products");
-            await productRepository.setStockQuantity(orderItem.productId, orderItem.Product.StockQuantity + orderItem.quantity - quantity);
             var result = await orderItemRepository.changeQuantityByOrderItemId(id, quantity);
             return Ok(orderItem);
 

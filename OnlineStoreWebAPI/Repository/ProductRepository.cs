@@ -111,5 +111,17 @@ namespace OnlineStoreWebAPI.Repository
                 await context.SaveChangesAsync();
             }
         }
+
+        public  async Task partialUpdateProduct(Product product)
+        {
+            context.Products.Update(product);
+            await context.SaveChangesAsync();
+        }
+
+        public async Task<int> getQuantityOfProduct(int productId)
+        {
+            var quantity = await context.Products.Where(p => p.productId == productId).Select(p => p.StockQuantity).FirstOrDefaultAsync();
+            return quantity;
+        }
     }
 }

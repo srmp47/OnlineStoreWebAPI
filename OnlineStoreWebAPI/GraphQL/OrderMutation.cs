@@ -1,4 +1,4 @@
-using HotChocolate;
+﻿using HotChocolate;
 using HotChocolate.Authorization;
 using HotChocolate.Types;
 using OnlineStoreWebAPI.DTO;
@@ -21,26 +21,26 @@ namespace OnlineStoreWebAPI.GraphQL
             if (inputOrder == null) throw new GraphQLException("enter input!");
             var order = mapper.Map<Order>(inputOrder);
             int userId = Convert.ToInt32(claims.Claims.FirstOrDefault(c => c.Type == "userId")?.Value);
-
             var isValidUserId = await userRepository.isThereUserWithIdAsync(userId);
             if (!isValidUserId) throw new GraphQLException("User not found");
+            if(inputOrder.orderItemDTOs == null || inputOrder.orderItemDTOs.Count == 0)
+                throw new GraphQLException("You must have at least one order item in your order");
             await orderRepository.setUserInOrder(order, userId);
-            if (inputOrder.orderItemDTOs != null && inputOrder.orderItemDTOs.Count != 0 )
+            foreach (var orderItemDTO in inputOrder.orderItemDTOs)
             {
-                foreach (var orderItemDTO in inputOrder.orderItemDTOs)
-                {
-                    var product = await productRepository.getProductByIdAsync(orderItemDTO.productId);
-                    if(product == null)
-                            throw new GraphQLException
-                            ($"product with id {orderItemDTO.productId} not exist!");
-                    if (product.StockQuantity < orderItemDTO.quantity)
-                        throw new GraphQLException("There is not enough stock for this product");
-                    var orderItem = mapper.Map<OrderItem>(orderItemDTO);
-                    orderItem.Order = order;
-                    await orderRepository.setOrderAndProductInOrderItem(orderItem);
-                    await productRepository.removeFromStockQuantity(orderItem.productId,orderItem.quantity);
-                    order.orderItems.Add(orderItem);
-                }
+                var product = await productRepository.getProductByIdAsync(orderItemDTO.productId);
+                if (product == null) throw new GraphQLException($"Product with id {orderItemDTO.productId} not exist");
+                if (product.StockQuantity < orderItemDTO.quantity)
+                    throw new GraphQLException($"There is not enough stock for product with id {product.productId}");
+                if (orderItemDTO.quantity <= 0)
+                    throw new GraphQLException("You can not add order item with zero or negative quantity");
+            }
+            foreach (var orderItemDTO in inputOrder.orderItemDTOs)
+            {
+                var orderItem = mapper.Map<OrderItem>(orderItemDTO);
+                orderItem.Order = order;
+                await orderRepository.setOrderAndProductInOrderItem(orderItem);
+                order.orderItems.Add(orderItem);
             }
             return await orderRepository.createNewOrderAsync(order);
         }
@@ -74,8 +74,8 @@ namespace OnlineStoreWebAPI.GraphQL
             return await orderRepository.deleteOrderByIdAsync(id);
         }
         [Authorize]
-        public async Task<Order> CancelOrder
-            (int orderId,[Service] OrderRepository orderRepository,
+        public async Task<Order> changeMyOrderStatusByOrderId
+            (int orderId,OrderStatus status ,[Service] OrderRepository orderRepository,
             ClaimsPrincipal claims, [Service]ProductRepository productRepository)
         {
             int userId = Convert.ToInt32(claims.Claims.FirstOrDefault(c => c.Type == "userId")?.Value);
@@ -86,23 +86,39 @@ namespace OnlineStoreWebAPI.GraphQL
             }
             if(order.userId != userId)
                 throw new GraphQLException("You can not cancel this order, because you are not owner of this order!");
-            if (order.status == OrderStatus.Shipped || order.status == OrderStatus.Delivered)
-                throw new GraphQLException("You can not cancel this order[shipped or delivered]");
             if (order.status == OrderStatus.Cancelled)
             {
                 throw new GraphQLException("This order is already cancelled.");
             }
-            foreach (var orderItem in order.orderItems)
+            if (status == OrderStatus.Cancelled && order.status != OrderStatus.Pending)
             {
-                await productRepository.addToStockQuantity(orderItem.productId, orderItem.quantity);
+                throw new GraphQLException("The order is being prepared for shipment. you can not cancel it");
             }
-           
-            await orderRepository.cancelOrderByIdAsync(orderId);
-            var result = await orderRepository.getOrderByOrderIdAsync(orderId);
-            return result;
+            if (status == OrderStatus.Cancelled && order.status == OrderStatus.Pending)
+            {
+                return await orderRepository.changeOrderStatusByOrderIdAsync(order.OrderId, status);
+            }
+            if (status == OrderStatus.Processing && order.status == OrderStatus.Pending)
+            {
+                foreach (var orderItem in order.orderItems)
+                {
+                    var productQuantity = await productRepository.getQuantityOfProduct(orderItem.productId);
+                    if (orderItem.quantity > productQuantity)
+                        throw new GraphQLException
+                            ($"We only have {productQuantity} units of “{orderItem.productId}” in stock, " +
+                            $"but you requested {orderItem.quantity}. Please reduce the quantity");
+                }
+                foreach (var orderItem in order.orderItems)
+                {
+                    await productRepository.removeFromStockQuantity(orderItem.productId, orderItem.quantity);
+                }
+                return await orderRepository.changeOrderStatusByOrderIdAsync(order.OrderId, status);
+            }
+            else throw new GraphQLException("You can not change the status of this order to this status");
         }
         [Authorize(Roles = new[] { "Admin" })]
         // in this method I do not remove the quantity of order items from the stock qunatity of product
+        // TODO correct these methodes (quantity is not changed)
         public async Task<Order> ChangeOrderStatus(int id, OrderStatus status, [Service] OrderRepository orderRepository)
         {
             var order = await orderRepository.getOrderByOrderIdAsync(id);

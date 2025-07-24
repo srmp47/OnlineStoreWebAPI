@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.EntityFrameworkCore;
 using OnlineStoreWebAPI.DBContext;
 using OnlineStoreWebAPI.DTO;
@@ -79,7 +80,14 @@ namespace OnlineStoreWebAPI.Repository
             return await context.Users.AnyAsync(u => u.userId == id);
         }
 
-        
+        public async Task partialUpdateUser(User user)
+        {
+            context.Users.Update(user);
+            await context.SaveChangesAsync();
+
+        }
+
+
         public async Task<User> updateUserAsync(int id, UserUpdateDTO user)
         {
             var currentUser = await context.Users.FirstOrDefaultAsync(u => u.userId == id);

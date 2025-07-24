@@ -1,4 +1,5 @@
-﻿using OnlineStoreWebAPI.DTO;
+﻿using Microsoft.AspNetCore.JsonPatch;
+using OnlineStoreWebAPI.DTO;
 using OnlineStoreWebAPI.Model;
 using OnlineStoreWebAPI.Pagination;
 
@@ -15,7 +16,7 @@ namespace OnlineStoreWebAPI.Repository
         public Task<bool> deActivateUserByUserIdAsync(int id);
         public Task<User> updateUserAsync(int id,UserUpdateDTO user);
         public Task<User> deleteUserByIdAsync(int id);
-
+        public  Task partialUpdateUser(User user);
 
     }
 }
