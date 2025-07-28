@@ -18,8 +18,8 @@ namespace OnlineStoreWebAPI.Controllers
     public class UserController : ControllerBase
     {
         private readonly IMapper mapper;
-        private readonly IUserRepository userRepository;
-        public UserController(IMapper mapper, IUserRepository userRepository)
+        private readonly IUserService userRepository;
+        public UserController(IMapper mapper, IUserService userRepository)
         {
             this.mapper = mapper;
             this.userRepository = userRepository;
@@ -68,6 +68,8 @@ namespace OnlineStoreWebAPI.Controllers
             return Ok(result);
 
         }
+        // TODO correct this method. if user enters an invalid email address,
+        // email field will be empty
         [HttpPost("AddUser")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> createNewUser([FromBody] UserWithoutIsActiveDTO inputUser)
@@ -110,57 +112,56 @@ namespace OnlineStoreWebAPI.Controllers
         }
         [Authorize(Roles = "Admin")]
         [HttpPut("{id}/Update")]
-        public async Task<IActionResult> updateUserById(int id, [FromBody] UserUpdateDTO user)
+        public async Task<IActionResult> updateUserById(int id, [FromBody] UserUpdateDTO userDTO)
         {
 
-            if (user == null) return BadRequest("User is null");
+            if (userDTO == null) return BadRequest("User is null");
             if (!ModelState.IsValid) return BadRequest("Enter Valid Information");
             var isValidId = await userRepository.isThereUserWithIdAsync(id);
             if (!isValidId) return BadRequest("User Not Found");
             if (!ModelState.IsValid) return BadRequest("Enter Valid Information");
             else
             {
-                var result = await userRepository.updateUserAsync(id, user);
+                var result = await userRepository.updateUserAsync(id, userDTO);
                 return Ok(result);
             }
         }
         //TODO could not test this method
-        [Authorize]
-        [HttpPatch]
-        public async Task<IActionResult> PatchUser( [FromBody] JsonPatchDocument<UserUpdateDTO> patchDoc)
-        {
-            if (patchDoc == null)
-                return BadRequest("Patch document is null");
-            var claimId = User.Claims.FirstOrDefault(u => u.Type == "userId");
-            int id = Convert.ToInt32(claimId.Value);
-            var user = await userRepository.getUserByIdAsync(id);
+        //[Authorize]
+        //[HttpPatch]
+        //public async Task<IActionResult> PatchUser( [FromBody] JsonPatchDocument<UserUpdateDTO> patchDoc)
+        //{
+        //    if (patchDoc == null)
+        //        return BadRequest("Patch document is null");
+        //    var claimId = User.Claims.FirstOrDefault(u => u.Type == "userId");
+        //    int id = Convert.ToInt32(claimId.Value);
+        //    var user = await userRepository.getUserByIdAsync(id);
 
-            var userToPatch = mapper.Map<UserUpdateDTO>(user);
+        //    var userToPatch = mapper.Map<UserUpdateDTO>(user);
 
-            patchDoc.ApplyTo(userToPatch); 
+        //    patchDoc.ApplyTo(userToPatch); 
 
-            if (!TryValidateModel(userToPatch))
-                return BadRequest(ModelState);
+        //    if (!TryValidateModel(userToPatch))
+        //        return BadRequest(ModelState);
 
-            mapper.Map(userToPatch, user);
-            await userRepository.partialUpdateUser(user);
+        //    mapper.Map(userToPatch, user);
+        //    await userRepository.partialUpdateUser(user);
 
-            return NoContent();
-        }
+        //    return NoContent();
+        //}
 
 
         [Authorize]
         [HttpPut("Update")]
-        public async Task<IActionResult> updateUser([FromBody] UserUpdateDTO user)
+        public async Task<IActionResult> updateUser([FromBody] UserUpdateDTO userDTO)
         {
-            if (user == null) return BadRequest("User is null");
+            if (userDTO == null) return BadRequest("User is null");
             if (!ModelState.IsValid) return BadRequest("Enter Valid Information");
             else
             {
-                //var claim = User.Claims.FirstOrDefault(u => u.Type == "userId");
                 var claimId = User.Claims.FirstOrDefault(u => u.Type == "userId");
                 int id = Convert.ToInt32(claimId.Value);
-                var result = await userRepository.updateUserAsync(id, user);
+                var result = await userRepository.updateUserAsync(id, userDTO);
                 return Ok(result);
             }
 

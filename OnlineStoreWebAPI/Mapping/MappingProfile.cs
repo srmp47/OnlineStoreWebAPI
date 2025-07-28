@@ -8,9 +8,9 @@ namespace OnlineStoreWebAPI.Mapping
 {
     public class MappingProfile:Profile
     {
-        private readonly IUserRepository userRepository;
-        private readonly IOrderRepository orderRepository;
-        private readonly IProductRepository productRepository;
+        private readonly IUserService userRepository;
+        private readonly IOrderService orderRepository;
+        private readonly IProductService productRepository;
         public MappingProfile()
         {
             this.orderRepository = orderRepository;

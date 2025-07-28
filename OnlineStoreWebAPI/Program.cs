@@ -12,6 +12,8 @@ using HotChocolate.AspNetCore;
 using Microsoft.AspNetCore.Authorization;
 
 
+// TODO implement microservices architecture 
+// TODO specification design pattern
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -26,10 +28,16 @@ builder.Services.AddDbContext<OnlineStoreDBContext>(option =>
         builder.Configuration["ConnectionStrings:CityConnectionString"]
         );
 });
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IOrderItemService, OrderItemService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IProductRepository, ProductRepository>();
-builder.Services.AddScoped<IOrderItemRepository, OrderItemRepository>();
+builder.Services.AddScoped<IProductRepository,ProductRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IOrderItemRepository, OrderItemRepository>();
+
+
 
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 // Configure JSON serialization to preserve object references and pretty-print the output
@@ -78,6 +86,10 @@ builder.Services
     .AddTypeExtension<OrderItemQuery>()
     .AddTypeExtension<OrderItemMutation>();
 // Register repositories for direct injection (needed for GraphQL [Service] injection)
+builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<OrderService>();
+builder.Services.AddScoped<OrderItemService>();
+builder.Services.AddScoped<ProductService>();
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<OrderRepository>();
 builder.Services.AddScoped<OrderItemRepository>();

@@ -14,18 +14,18 @@ namespace OnlineStoreWebAPI.Controllers
     public class OrderController : ControllerBase
     {
         private readonly IMapper mapper;
-        private readonly IOrderRepository orderRepository;
-        private readonly IProductRepository productRepository;
-        private readonly IUserRepository userRepository;
+        private readonly IOrderService orderService;
+        private readonly IProductService productService;
+        private readonly IUserService userService;
 
-        public OrderController(IMapper mapper, IOrderRepository orderRepository,
-            IProductRepository productRepository, IUserRepository userRepository)
+        public OrderController(IMapper mapper, IOrderService orderService,
+            IProductService productService, IUserService userService)
         {
             this.mapper = mapper;
-            this.orderRepository = orderRepository;
-            this.productRepository = productRepository;
-            this.userRepository = userRepository;
-            this.userRepository = userRepository;
+            this.orderService = orderService;
+            this.productService = productService;
+            this.userService = userService;
+            this.userService = userService;
         }
         
         [Authorize]
@@ -39,10 +39,10 @@ namespace OnlineStoreWebAPI.Controllers
             Order order = mapper.Map<Order>(inputOrder);
             var claimId = User.Claims.FirstOrDefault(u => u.Type == "userId");
             int currentUserId = Convert.ToInt32(claimId.Value);
-            await orderRepository.setUserInOrder(order, currentUserId);
+            await orderService.setUserInOrder(order, currentUserId);
             foreach (var orderItemDTO in inputOrder.orderItemDTOs)
             {
-            var product = await productRepository.getProductByIdAsync(orderItemDTO.productId);
+            var product = await productService.getProductByIdAsync(orderItemDTO.productId);
             if (product == null) return BadRequest($"Product with id {orderItemDTO.productId} not exist");
             if (product.StockQuantity < orderItemDTO.quantity)
             return BadRequest($"There is not enough stock for product with id {product.productId}");
@@ -53,12 +53,13 @@ namespace OnlineStoreWebAPI.Controllers
             {
             var orderItem = mapper.Map<OrderItem>(orderItemDTO);
             orderItem.Order = order;
-            await orderRepository.setOrderAndProductInOrderItem(orderItem);
+            await orderService.setOrderAndProductInOrderItem(orderItem);
             order.orderItems.Add(orderItem);
             }
+            orderService.setPricesOfOrderItems(order);
             
 
-            var result = await orderRepository.createNewOrderAsync(order);
+            var result = await orderService.createNewOrderAsync(order);
             return Ok(result);
         }
 
@@ -67,7 +68,7 @@ namespace OnlineStoreWebAPI.Controllers
         public async Task<ActionResult<IEnumerable<Order>>> getAllOrders
             ([FromQuery] PaginationParameters paginationParameters)
         {
-            var result = await orderRepository.getAllOrdersAsync(paginationParameters);
+            var result = await orderService.getAllOrdersAsync(paginationParameters);
             if (result == null) return NoContent();
             return Ok(result);
         }
@@ -75,7 +76,7 @@ namespace OnlineStoreWebAPI.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> getOrderById(int id)
         {
-            var order = await orderRepository.getOrderByOrderIdAsync(id);
+            var order = await orderService.getOrderByOrderIdAsync(id);
             if (order == null) return NotFound();
             return Ok(order);
 
@@ -85,7 +86,7 @@ namespace OnlineStoreWebAPI.Controllers
         public async Task<IActionResult> getAllOrdersOfUserById
             (int userId, [FromQuery] PaginationParameters paginationParameters)
         {
-            var orders = await orderRepository.getAllOrdersOfUserByIdAsync(userId, paginationParameters);
+            var orders = await orderService.getAllOrdersOfUserByIdAsync(userId, paginationParameters);
             if (orders == null) return NotFound();
             return Ok(orders);
         }
@@ -96,7 +97,7 @@ namespace OnlineStoreWebAPI.Controllers
         {
             var claimId = User.Claims.FirstOrDefault(u => u.Type == "userId");
             int currentUserId = Convert.ToInt32(claimId.Value);
-            var orders = await orderRepository.getAllOrdersOfUserByIdAsync(currentUserId, paginationParameters);
+            var orders = await orderService.getAllOrdersOfUserByIdAsync(currentUserId, paginationParameters);
             if (orders == null) return NotFound();
             return Ok(orders);
         }
@@ -104,7 +105,7 @@ namespace OnlineStoreWebAPI.Controllers
         [HttpGet("{id}/isThere")]
         public async Task<IActionResult> isThereOrderWithId(int id)
         {
-            if (await orderRepository.isThereOrderByIdAsync(id)) return Ok("There is");
+            if (await orderService.isThereOrderByIdAsync(id)) return Ok("There is");
             else return Ok("There is not");
 
         }
@@ -115,44 +116,23 @@ namespace OnlineStoreWebAPI.Controllers
         // and in that case the stock quantity of products is already added back to the stock quantity
         public async Task<IActionResult> deleteOrderById(int id)
         {
-            var isValidId = await orderRepository.isThereOrderByIdAsync(id);
+            var isValidId = await orderService.isThereOrderByIdAsync(id);
             if (!isValidId) return NotFound("Order not exist");
-            var result = await orderRepository.deleteOrderByIdAsync(id);
+            var result = await orderService.deleteOrderByIdAsync(id);
             return Ok(result);
 
         }
 
-        [HttpGet("OrderItemsOfOrder/{orderId}")]
-        [Authorize("Admin")]
-        public async Task<IActionResult> getAllOrderItemsByOrderId(int orderId)
-        {
-            var isValidId = await orderRepository.isThereOrderByIdAsync(orderId);
-            if (!isValidId) return BadRequest("Order not exist");
-            var result = orderRepository.getAllOrderItemsByOrderIdAsync(orderId);
-            return Ok(result);
-        }
-        [HttpGet("OrderItemsOfMyOrder/{orderId}")]
-        [Authorize]
-        public async Task<IActionResult> getAllOrderItemsOfMyOrder(int orderId)
-        {
-            var claimId = User.Claims.FirstOrDefault(u => u.Type == "userId");
-            int currentUserId = Convert.ToInt32(claimId.Value);
-            var isValidId = await orderRepository.isThereOrderByIdAsync(orderId);
-            if (!isValidId) return BadRequest("Order not exist");
-            var order = await orderRepository.getOrderByOrderIdAsync(orderId);
-            if (order == null || order.userId != currentUserId) return BadRequest("You can not see this order");
-            var result = await orderRepository.getAllOrderItemsByOrderIdAsync(orderId);
-            return Ok(result);
-        }
+        
         
         [HttpPatch("{id}/changeStatus/{status}")]
         [Authorize(Roles = "Admin")]
         // in this method I do not remove the quantity of order items from the stock qunatity of product
         public async Task<IActionResult> changeOrderStatusByOrderId(int id, OrderStatus status)
         {
-            var isValidId = await orderRepository.isThereOrderByIdAsync(id);
+            var isValidId = await orderService.isThereOrderByIdAsync(id);
             if (!isValidId) return BadRequest("Order not exist");
-            var result = await orderRepository.changeOrderStatusByOrderIdAsync(id, status);
+            var result = await orderService.changeOrderStatusByOrderIdAsync(id, status);
             return Ok(result);
         }
 
@@ -162,9 +142,9 @@ namespace OnlineStoreWebAPI.Controllers
         {
             var claimId = User.Claims.FirstOrDefault(u => u.Type == "userId");
             int currentUserId = Convert.ToInt32(claimId.Value);
-            var isValidId = await orderRepository.isThereOrderByIdAsync(id);
+            var isValidId = await orderService.isThereOrderByIdAsync(id);
             if (!isValidId) return BadRequest("Order not exist");
-            var order = await orderRepository.getOrderByOrderIdAsync(id);
+            var order = await orderService.getOrderByOrderIdAsync(id);
             if (order == null || order.userId != currentUserId)
                 return BadRequest("You can not change the status of this order");
             if ( order.status == OrderStatus.Cancelled)
@@ -177,14 +157,14 @@ namespace OnlineStoreWebAPI.Controllers
             }
             if(status == OrderStatus.Cancelled && order.status == OrderStatus.Pending)
             {
-                var result = await orderRepository.changeOrderStatusByOrderIdAsync(id, status);
+                var result = await orderService.changeOrderStatusByOrderIdAsync(id, status);
                 return Ok("The order is cancelled successfully.");
             }
             if (status == OrderStatus.Processing && order.status == OrderStatus.Pending)
             {
                 foreach (var orderItem in order.orderItems)
                 {
-                    var productQuantity = await productRepository.getQuantityOfProduct(orderItem.productId);
+                    var productQuantity = await productService.getQuantityOfProduct(orderItem.productId);
                     if (orderItem.quantity > productQuantity)
                         return BadRequest
                             ($"We only have {productQuantity} units of “{orderItem.productId}” in stock, " +
@@ -192,9 +172,9 @@ namespace OnlineStoreWebAPI.Controllers
                 }
                 foreach (var orderItem in order.orderItems)
                 {
-                    await productRepository.removeFromStockQuantity(orderItem.productId, orderItem.quantity);
+                    await productService.removeFromStockQuantity(orderItem.productId, orderItem.quantity);
                 }
-                var result = await orderRepository.changeOrderStatusByOrderIdAsync(id, status);
+                var result = await orderService.changeOrderStatusByOrderIdAsync(id, status);
                 return Ok("The order is processing successfully.");
             }
             else return BadRequest("You can not change the status of this order to this status");

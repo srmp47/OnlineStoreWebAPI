@@ -30,5 +30,7 @@ namespace OnlineStoreWebAPI.Model
         [Required]
         public OrderStatus status { get; set; } = OrderStatus.Pending;
 
+
+
     }
 }

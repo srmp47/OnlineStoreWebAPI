@@ -10,21 +10,21 @@ namespace OnlineStoreWebAPI.GraphQL
     public class ProductQuery
     {
         
-        public async Task<IEnumerable<Product>> GetProducts([Service] IProductRepository productRepository,
+        public async Task<IEnumerable<Product>> GetProducts([Service] IProductService productService,
             int pageId = 1 , int pageSize = 5)
         {
-            return await productRepository.getAllProductsAsync
+            return await productService.getAllProductsAsync
                 (new Pagination.PaginationParameters { PageId = pageId, PageSize = pageSize },null);
         }
         
-        public async Task<Product?> GetProductById(int id, [Service] IProductRepository productRepository)
+        public async Task<Product?> GetProductById(int id, [Service] IProductService productService)
         {
-            return await productRepository.getProductByIdAsync(id);
+            return await productService.getProductByIdAsync(id);
         }
         
-        public async Task<bool> IsProductExists(int id, [Service] IProductRepository productRepository)
+        public async Task<bool> IsProductExists(int id, [Service] IProductService productService)
         {
-            return await productRepository.isThereProductWithIdAsync(id);
+            return await productService.isThereProductWithIdAsync(id);
         }
     }
 }

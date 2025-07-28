@@ -10,23 +10,23 @@ namespace OnlineStoreWebAPI.GraphQL
     public class UserQuery
     {
         [Authorize(Roles = new[] { "Admin" })]
-        public async Task<IEnumerable<User>> GetUsers([Service] UserRepository userRepository,
+        public async Task<IEnumerable<User>> GetUsers([Service] UserService userService,
             int pageId= 1,int pageSize=5)
         {
-            return await userRepository.getAllUsersAsync
+            return await userService.getAllUsersAsync
                 (new Pagination.PaginationParameters { PageId = pageId, PageSize = pageSize });
         }
         [Authorize(Roles = new[] { "Admin" })]
 
-        public async Task<User?> GetUserById(int id, [Service] UserRepository userRepository)
+        public async Task<User?> GetUserById(int id, [Service] UserService userService)
         {
-            return await userRepository.getUserByIdAsync(id);
+            return await userService.getUserByIdAsync(id);
         }
         [Authorize]
-        public async Task<User> getMyInformation([Service] UserRepository userRepository, ClaimsPrincipal claims)
+        public async Task<User> getMyInformation([Service] UserService userService, ClaimsPrincipal claims)
         {
             int userId = int.Parse(claims.FindFirst("userId")?.Value ?? "0");
-            var user = await userRepository.getUserByIdAsync(userId);
+            var user = await userService.getUserByIdAsync(userId);
             if (user == null)
             {
                 throw new GraphQLException($"User with ID {userId} not found.you don't exist!! how could you login?!");
@@ -34,9 +34,9 @@ namespace OnlineStoreWebAPI.GraphQL
             return user;
         }
         [Authorize(Roles = new[] { "Admin" })]
-        public async Task<bool> IsActiveUser(int id, [Service] UserRepository userRepository)
+        public async Task<bool> IsActiveUser(int id, [Service] UserService userService)
         {
-            var user = await userRepository.getUserByIdAsync(id);
+            var user = await userService.getUserByIdAsync(id);
             if (user == null)
             {
                 throw new GraphQLException($"User with ID {id} not found.");
@@ -44,9 +44,9 @@ namespace OnlineStoreWebAPI.GraphQL
             return user.isActive;
         }
         [Authorize(Roles = new[] { "Admin" })]
-        public async Task<bool> IsUserExists(int id, [Service] UserRepository userRepository)
+        public async Task<bool> IsUserExists(int id, [Service] UserService userService)
         {
-            return await userRepository.isThereUserWithIdAsync(id);
+            return await userService.isThereUserWithIdAsync(id);
         }
          
     }

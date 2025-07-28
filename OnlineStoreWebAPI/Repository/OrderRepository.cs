@@ -1,117 +1,96 @@
-﻿using AutoMapper;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using OnlineStoreWebAPI.DBContext;
 using OnlineStoreWebAPI.Model;
 using OnlineStoreWebAPI.Pagination;
 
 namespace OnlineStoreWebAPI.Repository
 {
-    public class OrderRepository : IOrderRepository
+    public class OrderRepository:IOrderRepository
     {
-        private readonly OnlineStoreDBContext context;
-        private readonly IMapper mapper;
-        public OrderRepository(OnlineStoreDBContext inputContext, IMapper inputMapper)
+        private readonly OnlineStoreDBContext _context;
+        public OrderRepository(OnlineStoreDBContext _context)
         {
-            this.context = inputContext;
-            this.mapper = inputMapper;
+            this._context = _context;
         }
-        public async  Task cancelOrderByIdAsync(int id)
-        {
-            var order = await context.Orders.FirstOrDefaultAsync(o => o.OrderId == id);
-            
-            order.status = OrderStatus.Cancelled;
-            context.Update(order);
-            await context.SaveChangesAsync();
-        }
-
-        public async Task<Order> createNewOrderAsync(Order order)
-        {
-            context.Orders.Add(order);
-            await context.SaveChangesAsync();
-            return order;
-        }
-
         public async Task<IEnumerable<Order>> getAllOrdersAsync(PaginationParameters paginationParameters)
         {
-            //return await context.Orders
-            //.Include(o => o.User)
-            //.Include(o => o.orderItems)
-            //.ThenInclude(oi => oi.Product)
-            //.ToListAsync();
-            IQueryable<Order> orders = context.Orders.Include(o => o.User).Include(o => o.orderItems)
-            .ThenInclude(oi => oi.Product); 
-
-            orders = orders
+            var allOrders = await _context.Orders
+                .Include(o=>o.User)
+                .Include(o => o.orderItems)
+                .ThenInclude(o => o.Product)
                 .Skip(paginationParameters.PageSize * (paginationParameters.PageId - 1))
-                .Take(paginationParameters.PageSize);
-
-            return await orders.ToArrayAsync();
+                .Take(paginationParameters.PageSize)
+                .ToListAsync();
+            return allOrders;
         }
-
-        public async Task<IEnumerable<Order>> getAllOrdersOfUserByIdAsync
-            (int userId, PaginationParameters paginationParameters)
+        public async Task<Order?> getOrderByIdAsync(int id)
         {
-            //return await context.Orders.Where(o => o.userId == userId).ToListAsync();
-            IQueryable<Order> orders = context.Orders.Include(o => o.User).Include(o => o.orderItems)
-           .ThenInclude(oi => oi.Product).Where(o => o.userId == userId);
-
-            orders = orders
-                .Skip(paginationParameters.PageSize * (paginationParameters.PageId - 1))
-                .Take(paginationParameters.PageSize);
-            return await orders.ToArrayAsync();
-        }
-
-        public async Task<Order?> getOrderByOrderIdAsync(int orderId)
-        {
-            return await context.Orders.Where(o =>  o.OrderId == orderId).Include(o=>o.orderItems)
-                .FirstOrDefaultAsync();
-        }
-
-
-
-        public async Task<bool> isThereOrderByIdAsync(int id)
-        {
-            return await context.Orders.AnyAsync(o => o.OrderId == id);
-        }
-
-        public async Task<Order> updateOrderAsync(Order order)
-        {
-            var currentOrder = await context.Orders.FirstOrDefaultAsync(o => o.OrderId == order.OrderId);
-            mapper.Map(currentOrder, order);
-            await context.SaveChangesAsync();
+            var order = await _context.Orders
+                .Include(o => o.orderItems)
+                .FirstOrDefaultAsync(o => o.OrderId == id);
             return order;
         }
-        public async Task<Order> deleteOrderByIdAsync(int id)
+        public async Task<IEnumerable<Order>> getAllOrdersOfUserByIdAsync(int userId, PaginationParameters paginationParameters)
         {
-            var order = await context.Orders.FirstOrDefaultAsync(o => o.OrderId == id);
-            context.Orders.Remove(order);
-            await context.SaveChangesAsync();
-            return order;
+            var orders = await _context.Orders
+                .Include(o => o.User)
+                .Include(o => o.orderItems)
+                .ThenInclude(oi => oi.Product)
+                .Where(o => o.userId == userId)
+                .Skip(paginationParameters.PageSize * (paginationParameters.PageId - 1))
+                .Take(paginationParameters.PageSize)
+                .ToListAsync();
+            return orders;
         }
-        //in this function , I set User in Order by user id
+        public async Task<bool> isThereOrderWithIdAsync(int orderId)
+        {
+            var isThere = await  _context.Orders.AnyAsync(o=> o.OrderId == orderId);
+            return isThere;
+        }
+        public async Task createNewOrderAsync(Order order)
+        {
+            await _context.Orders.AddAsync(order);
+            await _context.SaveChangesAsync();
+        }
+        public async Task<bool> deleteOrderWithIdAsync(int orderId)
+        {
+            var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderId == orderId);
+            if (order == null)
+            {
+                return false; // Order not found
+            }
+            _context.Orders.Remove(order);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+        
+        public async Task updateOrder(Order order)
+        {
+            _context.Orders.Attach(order);
+            _context.Entry(order).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+        }
+
         public async Task setUserInOrder(Order order, int userId)
         {
             order.userId = userId;
-            order.User = await context.Users.FirstOrDefaultAsync(o => o.userId == userId);
+            User user = await _context.Users.FirstOrDefaultAsync(u => u.userId == userId);
+            order.User = user;
         }
         public async Task setOrderAndProductInOrderItem(OrderItem orderItem)
         {
-            orderItem.Product= context.Products.FirstOrDefault(p => p.productId == orderItem.productId);
-            orderItem.Order = context.Orders.FirstOrDefault(o => o.OrderId == orderItem.OrderId);
+            orderItem.Product = await _context.Products.FirstOrDefaultAsync(p => p.productId == orderItem.productId);
+            orderItem.Order = await  _context.Orders.FirstOrDefaultAsync(o => o.OrderId == orderItem.OrderId);
 
         }
 
-        public async Task<IEnumerable<OrderItem>> getAllOrderItemsByOrderIdAsync(int orderId)
+        public async Task<int> getUserIdOfOrder(int orderId)
         {
-            return await context.OrderItems.Where(oi => oi.OrderId == orderId).ToListAsync();
+            var userId = await _context.Orders.Where(o => o.OrderId == orderId)
+                .Select(o => o.userId)
+                .FirstOrDefaultAsync();
+            return userId;
         }
 
-        public async Task<Order> changeOrderStatusByOrderIdAsync(int id, OrderStatus status)
-        {
-            var order = await context.Orders.FirstOrDefaultAsync(o => o.OrderId == id);
-            order.status = status;
-            await context.SaveChangesAsync();
-            return order;
-        }
     }
 }

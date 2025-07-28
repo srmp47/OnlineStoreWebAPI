@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OnlineStoreWebAPI.DBContext;
 using OnlineStoreWebAPI.Model;
@@ -9,80 +8,78 @@ namespace OnlineStoreWebAPI.Repository
 {
     public class OrderItemRepository : IOrderItemRepository
     {
-        private readonly OnlineStoreDBContext context;
-        private readonly IMapper mapper;
+        private readonly OnlineStoreDBContext _context;
 
-        public OrderItemRepository(OnlineStoreDBContext inputContext , IMapper inputMapper)
+        public OrderItemRepository(OnlineStoreDBContext _context)
         {
-            this.context = inputContext;
-            this.mapper = inputMapper;
-            
+            this._context = _context;
+        }
+        public async Task createNewOrderItemAsync(OrderItem orderItem)
+        {
+            orderItem.price = orderItem.Product.price * orderItem.quantity;
+            var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderId == orderItem.OrderId);
+            order.totalAmount += orderItem.price;
+            _context.Orders.Update(order);
+            _context.OrderItems.Add(orderItem);
+            await _context.SaveChangesAsync();
         }
 
-        public async Task<OrderItem> changeQuantityByOrderItemId(int id, int quantity)
+        public async Task<bool> deleteOrderItemByIdAsync(int id)
         {
-            var orderItem = await context.OrderItems.FirstOrDefaultAsync(oi => oi.OrderItemId == id);
-            orderItem.quantity = quantity;
-            context.Update(orderItem);
-            await context.SaveChangesAsync();
+            var orderItem = await _context.OrderItems.FirstOrDefaultAsync(oi => oi.OrderItemId == id);
+            if (orderItem == null)
+            {
+                return false; // order item not found
+            }
+            var order = orderItem.Order;
+            _context.OrderItems.Remove(orderItem);
+            order.totalAmount -= orderItem.price;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<IEnumerable<OrderItem>> getAllOrderItemsAsync(PaginationParameters paginationParameters)
+        {
+            var orderItems = await _context.OrderItems
+                .Skip((paginationParameters.PageId - 1) * paginationParameters.PageSize)
+                .Take(paginationParameters.PageSize)
+                .ToListAsync();
+            return orderItems;
+        }
+
+        public async Task<IEnumerable<OrderItem>> getAllOrderItemsByOrderIdAsync(int orderId, PaginationParameters paginationParameters)
+        {
+            var orderItems = await _context.OrderItems.Where(oi => oi.OrderId == orderId).ToListAsync();
+            return orderItems;
+        }
+
+        public async Task<OrderItem?> getOrderItemByIdAsync(int id)
+        {
+            var orderItem = await  _context.OrderItems.Include(oi => oi.Order).Include(oi => oi.Product)
+                .FirstOrDefaultAsync(oi => oi.OrderItemId == id);
             return orderItem;
         }
 
-        public async Task<OrderItem> createNewOrderItemAsync(OrderItem orderItem)
+        public async Task<bool> isThereOrderItemWithIdAsync(int id)
         {
-            
-            context.OrderItems.Add(orderItem);
-            await context.SaveChangesAsync();
-            return orderItem;
-        }
-
-        public async Task<OrderItem> deleteOrderItemByIdAsync(int id)
-        {
-            var orderItem = await context.OrderItems.FirstOrDefaultAsync(oi => oi.OrderItemId == id);
-            context.OrderItems.Remove(orderItem);
-            await context.SaveChangesAsync(); 
-            return orderItem;
-        }
-
-        public async Task<IEnumerable<OrderItem>> getAllOrderItemsAsync
-            (PaginationParameters paginationParameters)
-        {
-            //return await context.OrderItems.OrderBy(oi => oi.OrderItemId).ToListAsync();
-            IQueryable<OrderItem> orderItems  = context.OrderItems;
-            orderItems = orderItems.Skip(paginationParameters.PageSize*(paginationParameters.PageId-1))
-                .Take(paginationParameters.PageSize);
-            return await orderItems.ToArrayAsync();
-        }
-
-        public async Task<OrderItem?> getOrderItemByOrderItemId( int orderItemId)
-        {
-            // use Include to get Order from order item
-            return await context.OrderItems.Include(oi=>oi.Order).Include(oi=>oi.Product)
-                .Where(oi => oi.OrderItemId == orderItemId)
-                .FirstOrDefaultAsync();
-        }
-
-        public async Task<bool> isThereOrderItemById(int id)
-        {
-            return await context.OrderItems.AnyAsync(oi => oi.OrderItemId == id);
+            var isThere = await _context.OrderItems.AnyAsync(oi => oi.OrderItemId == id);
+            return isThere;
         }
 
         public async Task setOrderAndProductInOrderItem(OrderItem orderItem)
         {
-            orderItem.Product = await context.Products.FirstOrDefaultAsync
+            orderItem.Product = await _context.Products.FirstOrDefaultAsync
                 (p => p.productId == orderItem.productId);
-            orderItem.Order = await context.Orders.FirstOrDefaultAsync
+            orderItem.Order = await _context.Orders.FirstOrDefaultAsync
                 (o => o.OrderId == orderItem.OrderId);
         }
 
         public async Task<OrderItem> updateOrderItemAsync(OrderItem orderItem)
         {
-            var currentOrderItem =await context.OrderItems.FirstOrDefaultAsync
-                (oi =>  oi.OrderItemId==orderItem.OrderItemId);
-            mapper.Map(currentOrderItem, orderItem);
-            await context.SaveChangesAsync();
+            _context.OrderItems.Attach(orderItem);
+            _context.Entry(orderItem).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
             return orderItem;
-            
         }
     }
 }

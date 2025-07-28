@@ -63,10 +63,6 @@ namespace OnlineStoreWebAPI.Controllers
         private User? ValidateUserCredentials(int id,
             string? password)
         {
-            
-            //if (password == "93589358" && id == 27)
-            //    return context.Users.FirstOrDefault(u => u.userId == id);
-            //return null;
             var user = context.Users
                 .FirstOrDefault(u => u.userId == id && u.password == password);
             return user;

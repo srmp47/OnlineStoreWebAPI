@@ -11,18 +11,16 @@ namespace OnlineStoreWebAPI.Controllers
 {
     [Route("api/Product")]
     [ApiController]
-    //TODO when user adds a product to  his/her order items , quantity of products should not be chnaged
-    // quantity is changed when the order is completed...
     // TODO when an order is completed , the price of it's prodcts should not be changed
-    // user should see the price that is paid befor. not currect price
+    // user should see the price that is paid befor. not current price
     public class ProductController : ControllerBase
     {
         private readonly IMapper mapper;
-        private readonly IProductRepository productRepository;
-        public ProductController(IMapper mapper, IProductRepository productRepository)
+        private readonly IProductService productService;
+        public ProductController(IMapper mapper, IProductService productService)
         {
             this.mapper = mapper;
-            this.productRepository = productRepository;
+            this.productService = productService;
         }
         [Authorize(Roles = "Admin")]
         [HttpPost("AddProduct")]
@@ -32,16 +30,16 @@ namespace OnlineStoreWebAPI.Controllers
             if (!ModelState.IsValid) return BadRequest("Bad Request");
             Product product = mapper.Map<Product>(inputProduct);
             if (!ModelState.IsValid) return BadRequest("Bad Request");
-            var result = await productRepository.createNewProductAsync(product);
+            var result = await productService.createNewProductAsync(product);
             return Ok(result);
         }
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> deleteProductById(int id)
         {
-            var isValidId = await productRepository.isThereProductWithIdAsync(id);
+            var isValidId = await productService.isThereProductWithIdAsync(id);
             if (!isValidId) return NotFound("Product not exist");
-            var result = await productRepository.deleteProductByIdAsync(id);
+            var result = await productService.deleteProductByIdAsync(id);
             return Ok(result);
 
         }
@@ -50,7 +48,7 @@ namespace OnlineStoreWebAPI.Controllers
         public async Task<ActionResult<IEnumerable<Product>>> getAllProducts
             ([FromQuery] PaginationParameters paginationParameters, [FromQuery] string? search)
         {
-            var result = await productRepository.getAllProductsAsync(paginationParameters, search);
+            var result = await productService.getAllProductsAsync(paginationParameters, search);
             if (result == null) return NoContent();
             return Ok(result);
 
@@ -59,7 +57,7 @@ namespace OnlineStoreWebAPI.Controllers
         [Authorize]
         public async Task<IActionResult> getProductById(int id)
         {
-            var product = await productRepository.getProductByIdAsync(id);
+            var product = await productService.getProductByIdAsync(id);
             if (product == null) return NotFound();
             return Ok(product);
 
@@ -68,23 +66,24 @@ namespace OnlineStoreWebAPI.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> isThereProductWithId(int id)
         {
-            if (await productRepository.isThereProductWithIdAsync(id)) return Ok("There is");
+            if (await productService.isThereProductWithIdAsync(id)) return Ok("There is");
             else return Ok("There is not");
 
         }
 
         [HttpPut("{id}/Update")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> updateProduct(int id, [FromBody] ProductUpdateDTO product)
+        // TODO implement the changes of price
+        public async Task<IActionResult> updateProduct(int id, [FromBody] ProductUpdateDTO productDTO)
         {
-            if (product == null) return BadRequest("Product is null");
+            if (productDTO == null) return BadRequest("Product is null");
             if (!ModelState.IsValid) return BadRequest("Enter Valid Information");
-            var isValidId = await productRepository.isThereProductWithIdAsync(id);
+            var isValidId = await productService.isThereProductWithIdAsync(id);
             if (!isValidId) return BadRequest("Product Not Found");
             if (!ModelState.IsValid) return BadRequest("Enter Valid Information");
             else
             {
-                var result = await productRepository.updateProductAsync(id, product);
+                var result = await productService.updateProductAsync(id, productDTO);
                 return Ok(result);
             }
         }
@@ -92,33 +91,35 @@ namespace OnlineStoreWebAPI.Controllers
         [Authorize]
         public async Task<IActionResult> getStockQuantityOfProduct(int id)
         {
-            var product = await productRepository.getProductByIdAsync(id);
+            var product = await productService.getProductByIdAsync(id);
             if (product == null) return NotFound("Product not found");
             return Ok(product.StockQuantity);
 
         }
-        [Authorize(Roles = "Admin")]
-        [HttpPatch("{id}")]
-        public async Task<IActionResult> PatchProductById(int id, [FromBody] JsonPatchDocument<ProductUpdateDTO> patchDoc)
-        {
-            if (patchDoc == null)
-                return BadRequest("Patch document is null");
+        //[Authorize(Roles = "Admin")]
+        //[HttpPatch("{id}")]
+        //// implement changes of price
+        //public async Task<IActionResult> PatchProductById(int id, [FromBody] JsonPatchDocument<ProductUpdateDTO> patchDoc)
+        //{
+        //    if (patchDoc == null)
+        //        return BadRequest("Patch document is null");
 
-            var product = await productRepository.getProductByIdAsync(id);
-            if (product == null)
-                return NotFound("Product not found");
+        //    var product = await productService.getProductByIdAsync(id);
+        //    if (product == null)
+        //        return NotFound("Product not found");
 
-            var productToPatch = mapper.Map<ProductUpdateDTO>(product);
+        //    var productToPatch = mapper.Map<ProductUpdateDTO>(product);
 
-            patchDoc.ApplyTo(productToPatch);
+        //    patchDoc.ApplyTo(productToPatch);
 
-            if (!TryValidateModel(productToPatch))
-                return BadRequest(ModelState);
+        //    if (!TryValidateModel(productToPatch))
+        //        return BadRequest(ModelState);
 
-            mapper.Map(productToPatch, product);
-            await productRepository.partialUpdateProduct(product);
+        //    mapper.Map(productToPatch, product);
+            //TODO
+            //await productService.partialUpdateProduct(product);
 
-            return NoContent();
-        }
+        //    return NoContent();
+        //}
     }
 }

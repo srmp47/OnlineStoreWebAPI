@@ -1,19 +1,19 @@
-﻿using OnlineStoreWebAPI.Model;
+﻿using Microsoft.AspNetCore.Mvc;
+using OnlineStoreWebAPI.Model;
 using OnlineStoreWebAPI.Pagination;
 
 namespace OnlineStoreWebAPI.Repository
 {
     public interface IOrderItemRepository
     {
-        public Task<OrderItem?> getOrderItemByOrderItemId(int orderItemId);
-        public Task<bool> isThereOrderItemById(int id);
-        public Task<OrderItem> createNewOrderItemAsync(OrderItem orderItem);
-        public Task<OrderItem> updateOrderItemAsync(OrderItem orderItem);
-        public Task<OrderItem> deleteOrderItemByIdAsync(int id);
-        public Task setOrderAndProductInOrderItem(OrderItem orderItem); 
-        public Task<IEnumerable<OrderItem>> getAllOrderItemsAsync
-            (PaginationParameters paginationParameters);
-        public Task<OrderItem> changeQuantityByOrderItemId(int id,int quantity);
+        Task<IEnumerable<OrderItem>> getAllOrderItemsAsync(PaginationParameters paginationParameters);
+        Task createNewOrderItemAsync(OrderItem orderItem);
+        Task<bool> deleteOrderItemByIdAsync(int id);
+        Task<OrderItem?> getOrderItemByIdAsync(int id);
+        Task<bool> isThereOrderItemWithIdAsync(int id);
+        Task<OrderItem> updateOrderItemAsync(OrderItem orderItem);
+        Task<IEnumerable<OrderItem>> getAllOrderItemsByOrderIdAsync(int orderId, PaginationParameters paginationParameters);
+        public Task setOrderAndProductInOrderItem(OrderItem orderItem);
 
     }
 }

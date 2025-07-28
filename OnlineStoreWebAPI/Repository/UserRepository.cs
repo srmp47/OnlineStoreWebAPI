@@ -1,104 +1,66 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.JsonPatch;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using OnlineStoreWebAPI.DBContext;
-using OnlineStoreWebAPI.DTO;
 using OnlineStoreWebAPI.Model;
-using OnlineStoreWebAPI.Pagination;
 
 namespace OnlineStoreWebAPI.Repository
 {
     public class UserRepository : IUserRepository
     {
-        private readonly OnlineStoreDBContext context;
-        private readonly IMapper mapper;
-        public UserRepository(OnlineStoreDBContext inputContext, IMapper inputMapper)
+        private readonly OnlineStoreDBContext _context;
+        public UserRepository(OnlineStoreDBContext _context)
         {
-            this.context = inputContext;
-            this.mapper = inputMapper;
+            this._context = _context;
+        }
+        public async Task CreateUserAsync(User user)
+        {
+            await _context.Users.AddAsync(user);
+            await _context.SaveChangesAsync();
         }
 
-        public async Task<bool>  activateUserByIdAsync(int id)
+        public async Task<bool> DeleteUserAsync(int userId)
         {
-            var user = await context.Users.FirstOrDefaultAsync(u => u.userId == id);
-            if(user == null) return false;
-            user.isActive = true;
-            await context.SaveChangesAsync();
+            var user =  await _context.Users.FirstOrDefaultAsync(u => u.userId == userId);
+            if (user == null)
+            {
+                return false; // User not found
+            }
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
             return true;
         }
 
-        public async Task<User> createNewUserAsync(User user)
+        public async Task<IEnumerable<User>> GetAllUsersAsync()
         {
-            context.Users.Add(user);
-            await context.SaveChangesAsync();
+            var result =  _context.Users.GetAsyncEnumerator;
+            return await _context.Users.ToListAsync();
+        }
+
+        public async Task<User> GetUserByIdAsync(int userId)
+        {
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.userId == userId);
             return user;
         }
 
-        public async  Task<bool> deActivateUserByUserIdAsync(int id)
+        // TODO search about these methodes and their implemention
+        public async Task UpdateUserAsync(User user)
         {
-            var user = await context.Users.FirstOrDefaultAsync(u => u.userId == id);
-            if(user == null) return false;
-            user.isActive = false;
-            await context.SaveChangesAsync();
-            return true;
+            _context.Users.Attach(user);  
+            _context.Entry(user).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+            
         }
 
-        public async Task<User> deleteUserByIdAsync(int id)
+        public async Task<bool> isActiveUserWithId(int userId)
         {
-            var user = await context.Users.FirstOrDefaultAsync(u => u.userId == id);
-            context.Users.Remove(user);
-            await context.SaveChangesAsync();
-            return user;
+            var isActive = await _context.Users.AnyAsync(u => u.userId == userId && u.isActive);
+            return isActive;
         }
 
-        public async Task<IEnumerable<User>> getAllUsersAsync(PaginationParameters paginationParameters)
+        public async Task<bool> isThereUserWithId(int userId)
         {
-            //return await context.Users.OrderBy(u => u.userId).ToListAsync() ;
-            IQueryable<User> users = context.Users;
-
-            users = users.
-                Skip(paginationParameters.PageSize * (paginationParameters.PageId - 1))
-                .Take(paginationParameters.PageSize);
-
-            return await users.ToArrayAsync();
-
-        }
-
-        public async Task<User?> getUserByIdAsync(int id)
-        {
-            return await context.Users.OrderBy(u => u.userId).Where(u => u.userId == id).FirstOrDefaultAsync();
-        }
-
-        public async Task<bool> isActiveUserWithIdAsync(int id)
-        {
-            var user = await context.Users.FirstOrDefaultAsync(u => u.userId == id);
-            return user.isActive;
-        }
-
-        public async Task<bool> isThereUserWithIdAsync(int id)
-        {
-            return await context.Users.AnyAsync(u => u.userId == id);
-        }
-
-        public async Task partialUpdateUser(User user)
-        {
-            context.Users.Update(user);
-            await context.SaveChangesAsync();
-
-        }
-
-
-        public async Task<User> updateUserAsync(int id, UserUpdateDTO user)
-        {
-            var currentUser = await context.Users.FirstOrDefaultAsync(u => u.userId == id);
-            if(user.firstName != null)currentUser.firstName = user.firstName;
-            if (user.lastName != null) currentUser.email = user.email;
-            if (user.password != null) currentUser.password = user.password;
-            if (user.email != null) currentUser.email = user.email;
-            if (user.address != null) currentUser.address = user.address;
-            context.Update(currentUser);
-            await context.SaveChangesAsync();
-            return currentUser;
+            var isThere = await _context.Users.AnyAsync(u => u.userId == userId);
+            return isThere;
         }
     }
 }

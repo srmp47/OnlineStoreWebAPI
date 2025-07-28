@@ -4,6 +4,7 @@ using HotChocolate.Types;
 using OnlineStoreWebAPI.DTO;
 using OnlineStoreWebAPI.Model;
 using OnlineStoreWebAPI.Repository;
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 
 namespace OnlineStoreWebAPI.GraphQL
@@ -14,13 +15,21 @@ namespace OnlineStoreWebAPI.GraphQL
     {
         [Authorize]
         public async Task<Order> CreateOrder
-            (ClaimsPrincipal claims ,OrderDTO inputOrder, [Service] OrderRepository orderRepository,
-            [Service] AutoMapper.IMapper mapper, [Service]ProductRepository productRepository,
-            [Service]UserRepository userRepository)
+            (ClaimsPrincipal claims ,OrderDTO inputOrder, [Service] OrderService orderRepository,
+            [Service] AutoMapper.IMapper mapper, [Service]ProductService productRepository,
+            [Service]UserService userRepository)
         {
             if (inputOrder == null) throw new GraphQLException("enter input!");
             var order = mapper.Map<Order>(inputOrder);
             int userId = Convert.ToInt32(claims.Claims.FirstOrDefault(c => c.Type == "userId")?.Value);
+            var context = new ValidationContext(inputOrder);
+            var results = new List<ValidationResult>();
+
+            if (!Validator.TryValidateObject(inputOrder, context, results, validateAllProperties: true))
+            {
+                var messages = results.Select(r => r.ErrorMessage);
+                throw new GraphQLException(string.Join(" | ", messages));
+            }
             var isValidUserId = await userRepository.isThereUserWithIdAsync(userId);
             if (!isValidUserId) throw new GraphQLException("User not found");
             if(inputOrder.orderItemDTOs == null || inputOrder.orderItemDTOs.Count == 0)
@@ -42,6 +51,7 @@ namespace OnlineStoreWebAPI.GraphQL
                 await orderRepository.setOrderAndProductInOrderItem(orderItem);
                 order.orderItems.Add(orderItem);
             }
+            orderRepository.setPricesOfOrderItems(order);
             return await orderRepository.createNewOrderAsync(order);
         }
 
@@ -64,7 +74,7 @@ namespace OnlineStoreWebAPI.GraphQL
         // in this method I do not remove the quantity of order items from the stock qunatity of product
         // because I assume that admin deletes the orders just when order is cancelled
         // and in that case the stock quantity of products is already added back to the stock quantity
-        public async Task<Order> DeleteOrder(int id, [Service] OrderRepository orderRepository)
+        public async Task<bool> DeleteOrder(int id, [Service] OrderService orderRepository)
         {
             var order = await orderRepository.getOrderByOrderIdAsync(id);
             if (order == null)
@@ -75,8 +85,8 @@ namespace OnlineStoreWebAPI.GraphQL
         }
         [Authorize]
         public async Task<Order> changeMyOrderStatusByOrderId
-            (int orderId,OrderStatus status ,[Service] OrderRepository orderRepository,
-            ClaimsPrincipal claims, [Service]ProductRepository productRepository)
+            (int orderId,OrderStatus status ,[Service] OrderService orderRepository,
+            ClaimsPrincipal claims, [Service]ProductService productRepository)
         {
             int userId = Convert.ToInt32(claims.Claims.FirstOrDefault(c => c.Type == "userId")?.Value);
             var order = await orderRepository.getOrderByOrderIdAsync(orderId);
@@ -119,7 +129,7 @@ namespace OnlineStoreWebAPI.GraphQL
         [Authorize(Roles = new[] { "Admin" })]
         // in this method I do not remove the quantity of order items from the stock qunatity of product
         // TODO correct these methodes (quantity is not changed)
-        public async Task<Order> ChangeOrderStatus(int id, OrderStatus status, [Service] OrderRepository orderRepository)
+        public async Task<Order> ChangeOrderStatus(int id, OrderStatus status, [Service] OrderService orderRepository)
         {
             var order = await orderRepository.getOrderByOrderIdAsync(id);
             if (order == null)
