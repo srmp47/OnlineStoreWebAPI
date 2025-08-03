@@ -28,6 +28,7 @@ namespace OnlineStoreWebAPI.Repository
                 return false; // Product not found
             }
             _context.Products.Remove(product);
+            await _context.SaveChangesAsync();
             return true;
         }
 
@@ -78,5 +79,7 @@ namespace OnlineStoreWebAPI.Repository
             await _context.SaveChangesAsync();
             return product;
         }
+
+       
     }
 }

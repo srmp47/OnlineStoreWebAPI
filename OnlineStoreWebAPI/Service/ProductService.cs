@@ -11,7 +11,7 @@ namespace OnlineStoreWebAPI.Repository
     {
         private readonly ProductRepository productRepository;
         private readonly IMapper mapper;
-        public ProductService(ProductRepository productRepository, IMapper inputMapper)
+        public ProductService(ProductRepository productRepository ,IMapper inputMapper)
         {
             this.productRepository = productRepository;
             this.mapper = inputMapper;

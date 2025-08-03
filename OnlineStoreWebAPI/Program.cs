@@ -116,3 +116,6 @@ app.MapControllers();
 app.MapGraphQL("/graphql");
 
 app.Run();
+
+// Make Program class accessible for integration tests
+public partial class Program { }

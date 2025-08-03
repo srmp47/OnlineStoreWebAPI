@@ -62,7 +62,7 @@ namespace OnlineStoreWebAPI.Controllers
                 return BadRequest("You can not add order item with zero or negative quantity");
             OrderItem orderItem = mapper.Map<OrderItem>(orderItemDTO);
             orderItem.OrderId = orderId;
-            await orderItemService.setOrderAndProductInOrderItem(orderItem);
+            //await orderItemService.setOrderAndProductInOrderItem(orderItem);
             if (!ModelState.IsValid) return BadRequest("Bad Request");
             var result = await orderItemService.createNewOrderItemAsync(orderItem);
             return Ok(result);

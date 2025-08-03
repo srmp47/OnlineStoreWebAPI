@@ -48,7 +48,7 @@ namespace OnlineStoreWebAPI.GraphQL
             if(input.quantity <= 0) throw new GraphQLException("You can not add order item with zero or negative quantity");
             var orderItem = mapper.Map<OrderItem>(input);
             orderItem.OrderId = orderId;
-            await orderItemService.setOrderAndProductInOrderItem(orderItem);
+           // await orderItemService.setOrderAndProductInOrderItem(orderItem);
             return await orderItemService.createNewOrderItemAsync(orderItem);
         }
 

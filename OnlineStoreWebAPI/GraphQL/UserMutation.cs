@@ -76,7 +76,7 @@ namespace OnlineStoreWebAPI.GraphQL
         public async Task<User> UpdateUser(ClaimsPrincipal claims, UserUpdateDTO inputUser, [Service] UserService userService)
         {
             int userId = Convert.ToInt32(claims.Claims.FirstOrDefault(c => c.Type == "userId")?.Value);
-            if (await userService.isThereUserWithIdAsync(userId))
+            if (!await userService.isThereUserWithIdAsync(userId))
             {
                 throw new GraphQLException($"User with ID {userId} not found.");
             }

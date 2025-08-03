@@ -1,0 +1,3 @@
+updates
+authentication with graphql
+when price of product is changed the price of orders and order items are not changed
