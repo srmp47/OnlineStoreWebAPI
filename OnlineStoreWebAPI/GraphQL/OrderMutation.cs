@@ -15,7 +15,7 @@ namespace OnlineStoreWebAPI.GraphQL
     {
         [Authorize]
         public async Task<Order> CreateOrder
-            (ClaimsPrincipal claims ,OrderDTO inputOrder, [Service] OrderService orderRepository,
+            (ClaimsPrincipal claims ,OrderDTO inputOrder, [Service] OrderService orderService,
             [Service] AutoMapper.IMapper mapper, [Service]ProductService productRepository,
             [Service]UserService userRepository)
         {
@@ -34,7 +34,7 @@ namespace OnlineStoreWebAPI.GraphQL
             if (!isValidUserId) throw new GraphQLException("User not found");
             if(inputOrder.orderItemDTOs == null || inputOrder.orderItemDTOs.Count == 0)
                 throw new GraphQLException("You must have at least one order item in your order");
-            await orderRepository.setUserInOrder(order, userId);
+            await orderService.setUserInOrder(order, userId);
             foreach (var orderItemDTO in inputOrder.orderItemDTOs)
             {
                 var product = await productRepository.getProductByIdAsync(orderItemDTO.productId);
@@ -48,11 +48,11 @@ namespace OnlineStoreWebAPI.GraphQL
             {
                 var orderItem = mapper.Map<OrderItem>(orderItemDTO);
                 orderItem.Order = order;
-                await orderRepository.setOrderAndProductInOrderItem(orderItem);
+                await orderService.setOrderAndProductInOrderItem(orderItem);
                 order.orderItems.Add(orderItem);
             }
-            orderRepository.setPricesOfOrderItems(order);
-            return await orderRepository.createNewOrderAsync(order);
+            orderService.setPricesOfOrderItems(order);
+            return await orderService.createNewOrderAsync(order);
         }
 
         //public async Task<Order> UpdateOrder(int orderId, OrderUpdateInputType input, [Service] OrderRepository orderRepository, [Service] AutoMapper.IMapper mapper)

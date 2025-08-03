@@ -12,7 +12,7 @@ using OnlineStoreWebAPI.Model;
 
 namespace TestProject.Repository
 {
-    public class OrderItemRepositoryTests : TestBase
+    public class OrderItemRepositoryTests : RepositoryTestBase
     {
         private readonly OrderItemRepository _orderItemRepository;
         private readonly OnlineStoreDBContext _context;

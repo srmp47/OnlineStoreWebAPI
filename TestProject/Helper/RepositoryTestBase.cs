@@ -7,12 +7,12 @@ using FluentAssertions;
 
 namespace TestProject.Helper
 {
-    public abstract class TestBase
+    public abstract class RepositoryTestBase
     {
         protected readonly IServiceProvider ServiceProvider;
         protected readonly Mock<ILogger> MockLogger;
 
-        protected TestBase()
+        protected RepositoryTestBase()
         {
             var services = new ServiceCollection();
             

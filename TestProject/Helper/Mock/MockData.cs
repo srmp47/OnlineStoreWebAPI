@@ -1,6 +1,7 @@
 using OnlineStoreWebAPI.Model;
 using OnlineStoreWebAPI.DTO;
 using AutoFixture;
+using OnlineStoreWebAPI.Repository;
 
 namespace TestProject.Helper.Mock
 {
@@ -41,6 +42,17 @@ namespace TestProject.Helper.Mock
             };
         }
 
+        public static Product CreateMockProductWithSpecificPrice(int price)
+        {
+            return new Product
+            {
+                name = Fixture.Create<string>(),
+                description = Fixture.Create<string>(),
+                price = price,
+                StockQuantity = Fixture.Create<int>()
+            };
+        }
+
         public static Order CreateMockOrder()
         {
             return new Order
@@ -51,6 +63,14 @@ namespace TestProject.Helper.Mock
                 status = OrderStatus.Pending
             };
         }
+
+        public static Order CreateMockCompleteOrderWithOrderItems()
+        {
+            var order = Fixture.Create<Order>();
+            return order;
+        }
+
+       
 
         public static Order CreateMockOrderForUser(int userId)
         {
@@ -65,16 +85,18 @@ namespace TestProject.Helper.Mock
 
         public static OrderItem CreateMockOrderItem(Order order,Product product)
         {
+            int quantity = Fixture.Create<int>();
             return new OrderItem
             {
                 Order = order,
                 OrderId = order.OrderId,
                 Product = product,
                 productId = product.productId,
-                quantity = Fixture.Create<int>(),
-                price = Fixture.Create<double>()
+                quantity = quantity
             };
         }
+
+        
 
         public static OrderItem CreateOrderItemWithProductIdAndOrderId(int productId, int orderId)
         {
@@ -82,8 +104,7 @@ namespace TestProject.Helper.Mock
             {
                 OrderId = orderId,
                 productId = productId,
-                quantity = Fixture.Create<int>(),
-                price = Fixture.Create<double>()
+                quantity = Fixture.Create<int>()
             };
         }
 
@@ -93,8 +114,7 @@ namespace TestProject.Helper.Mock
             {
                 OrderId = orderId,
                 productId = productId,
-                quantity = Fixture.Create<int>(),
-                price = Fixture.Create<double>()
+                quantity = Fixture.Create<int>()
             };
         }
         public static OrderItem CreateMockOrderItemWithSpecificOrder(int orderId)
@@ -103,8 +123,7 @@ namespace TestProject.Helper.Mock
             {
                 OrderId = orderId,
                 productId = Fixture.Create<int>(),
-                quantity = Fixture.Create<int>(),
-                price = Fixture.Create<double>()
+                quantity = Fixture.Create<int>()
             };
         }
 
@@ -112,6 +131,7 @@ namespace TestProject.Helper.Mock
         {
             return Fixture.CreateMany<User>(count).ToList();
         }
+       
 
         public static List<Product> CreateMockProducts(int count = 10)
         {
@@ -138,16 +158,15 @@ namespace TestProject.Helper.Mock
         }
 
         // DTOs
-        public static UserWithoutOrdersDTO CreateMockUserDto()
+        public static UserUpdateDTO CreateMockUserDto()
         {
-            return new UserWithoutOrdersDTO
+            return new UserUpdateDTO
             {
                 firstName = Fixture.Create<string>(),
                 lastName = Fixture.Create<string>(),
                 email = Fixture.Create<string>(),
                 password = Fixture.Create<string>(),
-                address = Fixture.Create<string>(),
-                isActive = true
+                address = Fixture.Create<string>()
             };
         }
 
@@ -168,6 +187,15 @@ namespace TestProject.Helper.Mock
             {
                 orderItemDTOs = new List<OrderItemDTO>()
             };
+        }
+
+        public static List<Product> CreateProductsToTestSearching()
+        {
+            var products = new List<Product> { new Product {name = "asda" , description = "dsoai  sd a a sduaosud " },
+                new Product {name = "test" , description = "daspdadoaida op a ai" },
+                new Product {description = " sjasda test sda" , name = "sda" } };
+
+            return products;
         }
     }
 } 

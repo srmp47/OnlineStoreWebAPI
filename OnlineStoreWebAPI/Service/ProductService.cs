@@ -9,9 +9,9 @@ namespace OnlineStoreWebAPI.Repository
 {
     public class ProductService : IProductService
     {
-        private readonly ProductRepository productRepository;
+        private readonly IProductRepository productRepository;
         private readonly IMapper mapper;
-        public ProductService(ProductRepository productRepository ,IMapper inputMapper)
+        public ProductService(IProductRepository productRepository ,IMapper inputMapper)
         {
             this.productRepository = productRepository;
             this.mapper = inputMapper;

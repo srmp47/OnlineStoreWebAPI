@@ -73,16 +73,12 @@ namespace OnlineStoreWebAPI.Repository
             return result;
         }
 
-        public async Task partialUpdateUser(User user)
-        {
-            await userRepository.UpdateUserAsync(user);
-
-        }
-
+        
+        // TODO implement partial update
         //TODO review this method:
         public async Task<User> updateUserAsync(int id, UserUpdateDTO userDTO)
         {
-            var user = Mapper.Map<User>(userDTO);
+            var user = mapper.Map<User>(userDTO);
             user.userId = id;
             await userRepository.UpdateUserAsync(user);
             return user;

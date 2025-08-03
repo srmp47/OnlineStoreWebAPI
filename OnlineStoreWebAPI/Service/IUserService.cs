@@ -16,7 +16,6 @@ namespace OnlineStoreWebAPI.Repository
         public Task<bool> deActivateUserByUserIdAsync(int id);
         public Task<User> updateUserAsync(int id,UserUpdateDTO userDTO);
         public Task<bool> deleteUserByIdAsync(int id);
-        public  Task partialUpdateUser(User user);
 
     }
 }

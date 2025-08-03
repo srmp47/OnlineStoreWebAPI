@@ -9,7 +9,7 @@ using Xunit;
 
 namespace TestProject.Repository
 {
-    public class UserRepositoryTests : TestBase
+    public class UserRepositoryTests : RepositoryTestBase
     {
         private readonly UserRepository _userRepository;
         private readonly OnlineStoreDBContext _context;

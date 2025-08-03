@@ -11,7 +11,7 @@ using OnlineStoreWebAPI.Pagination;
 
 namespace TestProject.Repository
 {
-    public class ProductRepositoryTests : TestBase
+    public class ProductRepositoryTests : RepositoryTestBase
     {
         private readonly ProductRepository _productRepository;
         private readonly OnlineStoreDBContext _context;

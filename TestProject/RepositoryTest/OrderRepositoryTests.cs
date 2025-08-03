@@ -11,7 +11,7 @@ using TestProject.Helper.Mock;
 
 namespace TestProject.Repository
 {
-    public class OrderRepositoryTests : TestBase
+    public class OrderRepositoryTests : RepositoryTestBase
     {
         private readonly OrderRepository _orderRepository;
         private readonly OnlineStoreDBContext _context;
