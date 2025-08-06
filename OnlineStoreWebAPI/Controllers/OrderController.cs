@@ -5,6 +5,9 @@ using OnlineStoreWebAPI.DTO;
 using OnlineStoreWebAPI.Model;
 using OnlineStoreWebAPI.Pagination;
 using OnlineStoreWebAPI.Repository;
+using OnlineStoreWebAPI.Enum;
+using Castle.Core.Internal;
+using Microsoft.IdentityModel.Tokens;
 
 namespace OnlineStoreWebAPI.Controllers
 {
@@ -32,8 +35,6 @@ namespace OnlineStoreWebAPI.Controllers
         [HttpPost("AddOrder")]
         public async Task<IActionResult> createNewOrder(OrderDTO inputOrder)
         {
-            if (inputOrder == null) return BadRequest("input Order is null!");
-            if (!ModelState.IsValid) return BadRequest("Bad Request");
             if( inputOrder.orderItemDTOs == null || inputOrder.orderItemDTOs.Count == 0)
                 return BadRequest("you must have at least one order item in your order");
             Order order = mapper.Map<Order>(inputOrder);
@@ -60,7 +61,7 @@ namespace OnlineStoreWebAPI.Controllers
             
 
             var result = await orderService.createNewOrderAsync(order);
-            return Ok(result);
+            return CreatedAtAction(nameof(getOrderById), new { id = result.OrderId }, result);
         }
 
         [HttpGet]
@@ -69,7 +70,7 @@ namespace OnlineStoreWebAPI.Controllers
             ([FromQuery] PaginationParameters paginationParameters)
         {
             var result = await orderService.getAllOrdersAsync(paginationParameters);
-            if (result == null) return NoContent();
+            if (!result.Any()) return NoContent();
             return Ok(result);
         }
         [HttpGet("{id}")]
@@ -86,8 +87,10 @@ namespace OnlineStoreWebAPI.Controllers
         public async Task<IActionResult> getAllOrdersOfUserById
             (int userId, [FromQuery] PaginationParameters paginationParameters)
         {
+            var isValidUserId = await userService.isThereUserWithIdAsync(userId);
+            if(!isValidUserId) return NotFound("user not found");
             var orders = await orderService.getAllOrdersOfUserByIdAsync(userId, paginationParameters);
-            if (orders == null) return NotFound();
+            if (orders.Any() == false) return NoContent();
             return Ok(orders);
         }
         [HttpGet("show my orders")]
@@ -98,7 +101,7 @@ namespace OnlineStoreWebAPI.Controllers
             var claimId = User.Claims.FirstOrDefault(u => u.Type == "userId");
             int currentUserId = Convert.ToInt32(claimId.Value);
             var orders = await orderService.getAllOrdersOfUserByIdAsync(currentUserId, paginationParameters);
-            if (orders == null) return NotFound();
+            if (orders.Any() == false) return NoContent();
             return Ok(orders);
         }
         [Authorize(Roles = "Admin")]
@@ -106,7 +109,7 @@ namespace OnlineStoreWebAPI.Controllers
         public async Task<IActionResult> isThereOrderWithId(int id)
         {
             if (await orderService.isThereOrderByIdAsync(id)) return Ok("There is");
-            else return Ok("There is not");
+            else return NotFound("There is not");
 
         }
         [HttpDelete("{id}")]

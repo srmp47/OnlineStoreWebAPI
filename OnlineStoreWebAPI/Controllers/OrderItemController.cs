@@ -5,6 +5,7 @@ using OnlineStoreWebAPI.DTO;
 using OnlineStoreWebAPI.Model;
 using OnlineStoreWebAPI.Pagination;
 using OnlineStoreWebAPI.Repository;
+using OnlineStoreWebAPI.Enum;
 
 namespace OnlineStoreWebAPI.Controllers
 {

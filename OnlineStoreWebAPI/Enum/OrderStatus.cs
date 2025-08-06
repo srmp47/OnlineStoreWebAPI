@@ -1,9 +1,12 @@
-﻿public enum OrderStatus
+﻿namespace OnlineStoreWebAPI.Enum
 {
-    Pending,     
-    Processing,  
-    Shipped,    
-    Delivered,   
-    Cancelled   
-    
+    public enum OrderStatus
+    {
+        Pending,     
+        Processing,  
+        Shipped,    
+        Delivered,   
+        Completed,
+        Cancelled   
+    }
 }

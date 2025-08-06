@@ -38,8 +38,14 @@ builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOrderItemRepository, OrderItemRepository>();
 
 
+var mappingConfig = new MapperConfiguration(cfg =>
+{
+    cfg.AddProfile<MappingProfile>();
+});
+IMapper mapper = mappingConfig.CreateMapper();
+builder.Services.AddSingleton(mapper);
+//Remove the manual mapper configuration and replace with:
 
-builder.Services.AddAutoMapper(typeof(MappingProfile));
 // Configure JSON serialization to preserve object references and pretty-print the output
 builder.Services.AddControllers()
     .AddJsonOptions(options =>

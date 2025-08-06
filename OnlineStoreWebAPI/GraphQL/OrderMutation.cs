@@ -6,6 +6,7 @@ using OnlineStoreWebAPI.Model;
 using OnlineStoreWebAPI.Repository;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
+using OnlineStoreWebAPI.Enum;
 
 namespace OnlineStoreWebAPI.GraphQL
 {

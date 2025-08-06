@@ -1,5 +1,6 @@
 ﻿using OnlineStoreWebAPI.Model;
 using OnlineStoreWebAPI.Pagination;
+using OnlineStoreWebAPI.Enum;
 
 namespace OnlineStoreWebAPI.Repository
 {

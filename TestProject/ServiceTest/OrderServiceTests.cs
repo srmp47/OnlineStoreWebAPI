@@ -1,6 +1,7 @@
 ﻿using OnlineStoreWebAPI.Model;
 using OnlineStoreWebAPI.Pagination;
 using OnlineStoreWebAPI.Repository;
+using OnlineStoreWebAPI.Enum;
 using System;
 using System.Collections.Generic;
 using System.Linq;

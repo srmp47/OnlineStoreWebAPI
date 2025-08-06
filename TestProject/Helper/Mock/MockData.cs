@@ -1,5 +1,6 @@
 using OnlineStoreWebAPI.Model;
 using OnlineStoreWebAPI.DTO;
+using OnlineStoreWebAPI.Enum;
 using AutoFixture;
 using OnlineStoreWebAPI.Repository;
 

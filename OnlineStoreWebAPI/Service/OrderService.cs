@@ -4,6 +4,7 @@ using OnlineStoreWebAPI.DBContext;
 using OnlineStoreWebAPI.Model;
 using OnlineStoreWebAPI.Pagination;
 using System.Text.RegularExpressions;
+using OnlineStoreWebAPI.Enum;
 
 namespace OnlineStoreWebAPI.Repository
 {
